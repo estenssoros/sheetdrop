@@ -1,13 +1,34 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
+const (
+	// SourceTypeExcel excel files
+	SourceTypeExcel = "excel"
+	// SourceTypeCSV csv files
+	SourceTypeCSV = "csv"
+	// SourceTypeGoogleSheets google sheets documents
+	SourceTypeGoogleSheets = "google-sheets"
+	// SourceTypeGoogleDrive google drive files
+	SourceTypeGoogleDrive = "google-drive"
+	// SourceTypeDropBox drop box files
+	SourceTypeDropBox = "drop-box"
+)
+
+// Schema source information for data
 type Schema struct {
 	ID          int
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 	APIID       int `gorm:"column:api_id"`
 	StartRow    int
 	StartColumn int
 	Headers     []*Header
+	SourceType  string `gorm:"varchar(10)"`
+	SourceURI   string
 }
 
 func (s Schema) String() string {
