@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/estenssoros/sheetdrop/constants"
+	"github.com/estenssoros/sheetdrop/internal/helpers"
 	"github.com/pkg/errors"
-	"github.com/seaspancode/theseus/helpers"
 )
 
 // S3SaveFile saves a file to s3
