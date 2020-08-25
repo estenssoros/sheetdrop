@@ -8,6 +8,7 @@ import (
 	"github.com/estenssoros/sheetdrop/internal/helpers"
 	"github.com/estenssoros/sheetdrop/internal/models"
 	"github.com/pkg/errors"
+	"github.com/satori/uuid"
 	"github.com/tealeg/xlsx"
 )
 
@@ -151,6 +152,9 @@ func columnDataType(rows []*xlsx.Row, headerIdx int) (dataType string, err error
 	if err := tryDataType(rows, headerIdx, validateFloat); err == nil {
 		return models.DataTypeFloat, err
 	}
+	if err := tryDataType(rows, headerIdx, validateUUID); err == nil {
+		return models.DataTypeUUID, err
+	}
 	return models.DataTypeString, nil
 }
 
@@ -191,5 +195,10 @@ func validateInt(cell *xlsx.Cell) error {
 
 func validateFloat(cell *xlsx.Cell) error {
 	_, err := cell.Float()
+	return err
+}
+
+func validateUUID(cell *xlsx.Cell) error {
+	_, err := uuid.FromString(cell.Value)
 	return err
 }
