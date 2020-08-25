@@ -1,7 +1,7 @@
 package common
 
 import (
-	"github.com/estenssoros/sheetdrop/internal/constants"
+	"github.com/estenssoros/sheetdrop/constants"
 	"github.com/pkg/errors"
 )
 

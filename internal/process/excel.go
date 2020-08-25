@@ -3,12 +3,11 @@ package process
 import (
 	"io"
 
+	"github.com/estenssoros/sheetdrop/constants"
 	"github.com/estenssoros/sheetdrop/internal/common"
-	"github.com/estenssoros/sheetdrop/internal/constants"
 	"github.com/estenssoros/sheetdrop/internal/helpers"
 	"github.com/estenssoros/sheetdrop/internal/models"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/tealeg/xlsx"
 )
 
@@ -131,8 +130,7 @@ func sheetDataTypes(sheet *xlsx.Sheet, startRow int, headers map[string]int) (da
 			err = errors.Errorf("%v", r)
 		}
 	}()
-	for headerName, headerIndex := range headers {
-		logrus.Infof("columnDataType: %s", headerName)
+	for _, headerIndex := range headers {
 		dataType, err := columnDataType(sheet.Rows[startRow+1:], headerIndex)
 		if err != nil {
 			return nil, errors.Wrap(err, "columnDataType")

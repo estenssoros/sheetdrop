@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Cmd entrypoint
 var Cmd = &cobra.Command{
 	Use:     "server",
 	Short:   "run sheetdrop server",
@@ -29,6 +30,8 @@ func run() error {
 	e.GET("/", Main)
 	return e.Start(":1323")
 }
+
+// Main main template
 func Main(c echo.Context) error {
 	return c.Render(http.StatusOK, "main", "World")
 }

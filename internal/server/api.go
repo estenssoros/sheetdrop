@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/estenssoros/sheetdrop/constants"
 	"github.com/estenssoros/sheetdrop/internal/common"
-	"github.com/estenssoros/sheetdrop/internal/constants"
 	"github.com/estenssoros/sheetdrop/internal/process"
 	"github.com/labstack/echo"
 )
