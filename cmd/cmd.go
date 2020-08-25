@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"github.com/estenssoros/sheetdrop/internal/db"
 	"github.com/estenssoros/sheetdrop/internal/server"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	cmd.AddCommand(server.Cmd)
+	cmd.AddCommand(db.Cmd)
 }
 
 var cmd = &cobra.Command{
