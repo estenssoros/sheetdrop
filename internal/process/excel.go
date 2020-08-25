@@ -44,15 +44,13 @@ func excelSheet(sheet *xlsx.Sheet) (*models.Schema, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "sheetHeader")
 	}
-	dataTypes, err := sheetDataTypes(sheet, startRow, headers)
-	if err != nil {
+	if err := sheetDataTypes(sheet, startRow, headers); err != nil {
 		return nil, errors.Wrap(err, "sheetDataTypes")
 	}
 	return &models.Schema{
 		StartRow:    startRow,
 		StartColumn: startColumn,
 		Headers:     headers,
-		DataTypes:   dataTypes,
 	}, nil
 }
 
@@ -106,56 +104,54 @@ func sheetStartColumn(sheet *xlsx.Sheet, startRow int) (startColumn int, err err
 	return -1, errors.New("could not determing start column")
 }
 
-func sheetHeaders(sheet *xlsx.Sheet, startRow, startColumn int) (headers map[string]int, err error) {
+func sheetHeaders(sheet *xlsx.Sheet, startRow, startColumn int) (headers []*models.Header, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = errors.Errorf("%v", r)
 		}
 	}()
 	row := sheet.Rows[startRow]
-	headers = map[string]int{}
+	unique := map[string]struct{}{}
 	for i, cell := range row.Cells[startColumn:] {
 		headerName := helpers.CamelCase(cell.Value)
-		if _, ok := headers[headerName]; ok {
+		if _, ok := unique[headerName]; ok {
 			return nil, errors.Errorf("duplicate headers: %s", headerName)
 		}
-		headers[headerName] = startColumn + i
+		headers = append(headers, &models.Header{
+			Name:  headerName,
+			Index: startColumn + i})
 	}
 	return headers, nil
 }
 
-func sheetDataTypes(sheet *xlsx.Sheet, startRow int, headers map[string]int) (dataTypes []*models.DataType, err error) {
+func sheetDataTypes(sheet *xlsx.Sheet, startRow int, headers []*models.Header) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = errors.Errorf("%v", r)
 		}
 	}()
-	for _, headerIndex := range headers {
-		dataType, err := columnDataType(sheet.Rows[startRow+1:], headerIndex)
+	for _, header := range headers {
+		dataType, err := columnDataType(sheet.Rows[startRow+1:], header.Index)
 		if err != nil {
-			return nil, errors.Wrap(err, "columnDataType")
+			return errors.Wrap(err, "columnDataType")
 		}
-		dataTypes = append(dataTypes, dataType)
+		header.DataType = dataType
 	}
 	return
 }
 
-func columnDataType(rows []*xlsx.Row, headerIdx int) (dataType *models.DataType, err error) {
-	dataType = &models.DataType{Idx: headerIdx}
+func columnDataType(rows []*xlsx.Row, headerIdx int) (dataType string, err error) {
+
 	if err := tryDataType(rows, headerIdx, validateTime); err == nil {
-		dataType.Type = models.DataTypeTime
-		return dataType, err
+		return models.DataTypeTime, err
 	}
 	if err := tryDataType(rows, headerIdx, validateFloat); err == nil {
-		dataType.Type = models.DataTypeInt
-		return dataType, err
+		return models.DataTypeInt, err
 	}
 	if err := tryDataType(rows, headerIdx, validateFloat); err == nil {
-		dataType.Type = models.DataTypeFloat
-		return dataType, err
+		return models.DataTypeFloat, err
 	}
-	dataType.Type = models.DataTypeString
-	return
+	return models.DataTypeString, nil
 }
 
 func tryDataType(rows []*xlsx.Row, headerIdx int, validator func(*xlsx.Cell) error) (err error) {
