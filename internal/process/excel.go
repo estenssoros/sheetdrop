@@ -13,20 +13,19 @@ import (
 )
 
 // Excel processes an excel row into a schema
-func Excel(r io.ReaderAt, size int64) (interface{}, error) {
+func Excel(r io.ReaderAt, size int64) (*models.Schema, error) {
 	xlFile, err := xlsx.OpenReaderAtWithRowLimit(r, size, constants.InitialRowLimit)
 	if err != nil {
 		return nil, errors.Wrap(err, "xlsx.OpenBinary")
 	}
-	schemas := []*models.Schema{}
-	for _, sheet := range xlFile.Sheets {
-		schema, err := excelSheet(sheet)
-		if err != nil {
-			return nil, errors.Wrap(err, "excelSheet")
-		}
-		schemas = append(schemas, schema)
+	if len(xlFile.Sheets) < 1 {
+		return nil, errors.New("no sheets")
 	}
-	return schemas, nil
+	schema, err := excelSheet(xlFile.Sheets[0])
+	if err != nil {
+		return nil, errors.Wrap(err, "excelSheet")
+	}
+	return schema, nil
 }
 
 func excelSheet(sheet *xlsx.Sheet) (*models.Schema, error) {
@@ -142,7 +141,6 @@ func sheetDataTypes(sheet *xlsx.Sheet, startRow int, headers []*models.Header) (
 }
 
 func columnDataType(rows []*xlsx.Row, headerIdx int) (dataType string, err error) {
-
 	if err := tryDataType(rows, headerIdx, validateTime); err == nil {
 		return models.DataTypeTime, err
 	}
