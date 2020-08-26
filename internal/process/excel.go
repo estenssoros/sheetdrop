@@ -51,6 +51,7 @@ func excelSheet(sheet *xlsx.Sheet) (*models.Schema, error) {
 		StartRow:    startRow,
 		StartColumn: startColumn,
 		Headers:     headers,
+		SourceType:  constants.SourceTypeExcel,
 	}, nil
 }
 
@@ -131,7 +132,7 @@ func sheetDataTypes(sheet *xlsx.Sheet, startRow int, headers []*models.Header) (
 		}
 	}()
 	for _, header := range headers {
-		dataType, err := columnDataType(sheet.Rows[startRow+1:], header.Index)
+		dataType, err := columnDataTypeExcel(sheet.Rows[startRow+1:], header.Index)
 		if err != nil {
 			return errors.Wrap(err, "columnDataType")
 		}
@@ -140,23 +141,23 @@ func sheetDataTypes(sheet *xlsx.Sheet, startRow int, headers []*models.Header) (
 	return
 }
 
-func columnDataType(rows []*xlsx.Row, headerIdx int) (dataType string, err error) {
-	if err := tryDataType(rows, headerIdx, validateTime); err == nil {
+func columnDataTypeExcel(rows []*xlsx.Row, headerIdx int) (dataType string, err error) {
+	if err := tryDataTypeExcel(rows, headerIdx, validateTimeExcel); err == nil {
 		return models.DataTypeTime, err
 	}
-	if err := tryDataType(rows, headerIdx, validateFloat); err == nil {
-		return models.DataTypeInt, err
-	}
-	if err := tryDataType(rows, headerIdx, validateFloat); err == nil {
+	if err := tryDataTypeExcel(rows, headerIdx, validateIntExcel); err == nil {
 		return models.DataTypeFloat, err
 	}
-	if err := tryDataType(rows, headerIdx, validateUUID); err == nil {
+	if err := tryDataTypeExcel(rows, headerIdx, validateFloatExcel); err == nil {
+		return models.DataTypeInt, err
+	}
+	if err := tryDataTypeExcel(rows, headerIdx, validateUUIDExcel); err == nil {
 		return models.DataTypeUUID, err
 	}
 	return models.DataTypeString, nil
 }
 
-func tryDataType(rows []*xlsx.Row, headerIdx int, validator func(*xlsx.Cell) error) (err error) {
+func tryDataTypeExcel(rows []*xlsx.Row, headerIdx int, validator func(*xlsx.Cell) error) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = errors.Errorf("%v", r)
@@ -179,24 +180,24 @@ func tryDataType(rows []*xlsx.Row, headerIdx int, validator func(*xlsx.Cell) err
 	return nil
 }
 
-func validateTime(cell *xlsx.Cell) error {
+func validateTimeExcel(cell *xlsx.Cell) error {
 	if cell.IsTime() {
 		return nil
 	}
 	return errors.New("isTime")
 }
 
-func validateInt(cell *xlsx.Cell) error {
+func validateIntExcel(cell *xlsx.Cell) error {
 	_, err := cell.Int()
 	return err
 }
 
-func validateFloat(cell *xlsx.Cell) error {
+func validateFloatExcel(cell *xlsx.Cell) error {
 	_, err := cell.Float()
 	return err
 }
 
-func validateUUID(cell *xlsx.Cell) error {
+func validateUUIDExcel(cell *xlsx.Cell) error {
 	_, err := uuid.FromString(cell.Value)
 	return err
 }
