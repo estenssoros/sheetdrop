@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"io"
+	"mime/multipart"
 	"path/filepath"
 
 	"github.com/estenssoros/sheetdrop/constants"
@@ -16,7 +16,7 @@ import (
 type ProcessFileInput struct {
 	FileName  string
 	Extension *string
-	File      io.ReaderAt
+	File      multipart.File
 	Size      int64
 }
 
