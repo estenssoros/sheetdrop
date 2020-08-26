@@ -3,6 +3,8 @@ package server
 import (
 	"net/http"
 
+	"github.com/estenssoros/sheetdrop/internal/middle"
+	"github.com/estenssoros/sheetdrop/orm"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/pkg/errors"
@@ -19,15 +21,26 @@ var Cmd = &cobra.Command{
 
 func run() error {
 	e := echo.New()
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-	routes(e.Group("/api"))
 	t, err := NewTemplate()
 	if err != nil {
 		return errors.Wrap(err, "NewTemplate")
 	}
 	e.Renderer = t
 	e.GET("/", Main)
+	db, err := orm.Connect()
+	if err != nil {
+		return errors.Wrap(err, "orm.Connect")
+	}
+	defer db.Close()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
+	routes(e.Group(
+		"/api",
+		// middleware.JWT([]byte("secret")),
+		middle.DBInjector(db),
+	))
+
 	return e.Start(":1323")
 }
 
