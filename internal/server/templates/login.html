@@ -1,0 +1,20 @@
+{{define "login"}}
+<!DOCTYPE html>
+<html>
+{{template "head"}}
+<body>
+    <div class="ui container">
+        {{template "topbar"}}
+        <form action="/api/login" method="POST">
+         <div class="form-group">
+            <label for="exampleInputEmail1">User Name</label>
+            <input type="hidden" name="csrf" value="{{ . }}">
+            <input type="text" class="form-control" name="userName">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</body>
+{{template "scripts"}}
+</html>
+{{end}}
