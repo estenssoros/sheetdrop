@@ -1,23 +1,23 @@
 package process
 
 import (
-	"io"
-
 	"github.com/estenssoros/sheetdrop/constants"
-	"github.com/estenssoros/sheetdrop/internal/common"
 	"github.com/estenssoros/sheetdrop/internal/helpers"
 	"github.com/estenssoros/sheetdrop/internal/models"
 	"github.com/pkg/errors"
 	"github.com/satori/uuid"
+	"github.com/sirupsen/logrus"
 	"github.com/tealeg/xlsx"
 )
 
 // Excel processes an excel row into a schema
-func Excel(r io.ReaderAt, size int64) (*models.Schema, error) {
-	xlFile, err := xlsx.OpenReaderAtWithRowLimit(r, size, constants.InitialRowLimit)
+func Excel(data []byte) (*models.Schema, error) {
+	logrus.Info("processing excel")
+	xlFile, err := xlsx.OpenBinaryWithRowLimit(data, constants.InitialRowLimit)
 	if err != nil {
 		return nil, errors.Wrap(err, "xlsx.OpenBinary")
 	}
+
 	if len(xlFile.Sheets) < 1 {
 		return nil, errors.New("no sheets")
 	}
@@ -30,7 +30,7 @@ func Excel(r io.ReaderAt, size int64) (*models.Schema, error) {
 
 func excelSheet(sheet *xlsx.Sheet) (*models.Schema, error) {
 	if !sheetHasData(sheet) {
-		return nil, common.ErrNoData
+		return nil, errors.New("no data")
 	}
 	startRow, err := sheetStartRow(sheet)
 	if err != nil {
@@ -108,7 +108,7 @@ func sheetStartColumn(sheet *xlsx.Sheet, startRow int) (startColumn int, err err
 func sheetHeaders(sheet *xlsx.Sheet, startRow, startColumn int) (headers []*models.Header, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = errors.Errorf("%v", r)
+			err = errors.Errorf("recovered err: %v", r)
 		}
 	}()
 	row := sheet.Rows[startRow]
@@ -128,7 +128,7 @@ func sheetHeaders(sheet *xlsx.Sheet, startRow, startColumn int) (headers []*mode
 func sheetDataTypes(sheet *xlsx.Sheet, startRow int, headers []*models.Header) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = errors.Errorf("%v", r)
+			err = errors.Errorf("recovered err: %v", r)
 		}
 	}()
 	for _, header := range headers {
@@ -160,7 +160,7 @@ func columnDataTypeExcel(rows []*xlsx.Row, headerIdx int) (dataType string, err 
 func tryDataTypeExcel(rows []*xlsx.Row, headerIdx int, validator func(*xlsx.Cell) error) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = errors.Errorf("%v", r)
+			err = errors.Errorf("recovered err: %v", r)
 		}
 	}()
 	var found bool

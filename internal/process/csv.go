@@ -1,6 +1,7 @@
 package process
 
 import (
+	"bytes"
 	"encoding/csv"
 	"io"
 	"strconv"
@@ -11,12 +12,15 @@ import (
 	"github.com/estenssoros/sheetdrop/internal/models"
 	"github.com/pkg/errors"
 	"github.com/satori/uuid"
+	"github.com/sirupsen/logrus"
 )
 
-func CSV(reader io.Reader) (*models.Schema, error) {
-	r := csv.NewReader(reader)
+func CSV(data []byte) (*models.Schema, error) {
+	logrus.Info("processing csv")
+	r := csv.NewReader(bytes.NewReader(data))
 	headers := []*models.Header{}
 	rows := [][]string{}
+	var count int
 	for {
 		row, err := r.Read()
 		if err == io.EOF {
@@ -34,6 +38,10 @@ func CSV(reader io.Reader) (*models.Schema, error) {
 			continue
 		}
 		rows = append(rows, row)
+		count++
+		if count > constants.InitialRowLimit {
+			break
+		}
 	}
 	if err := csvDataTypes(rows, headers); err != nil {
 		return nil, errors.Wrap(err, "csvDataTypes")
