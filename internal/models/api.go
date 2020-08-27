@@ -8,7 +8,7 @@ type API struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	UserID    int
-	Name      string `gorm:"type:varchar(50)"`
+	Name      *string `gorm:"type:varchar(50)"`
 }
 
 // TableName implements tablenameable
