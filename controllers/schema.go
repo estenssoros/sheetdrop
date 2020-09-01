@@ -50,3 +50,7 @@ func GetUserFromSchemaID(db *gorm.DB, schemaID int) (*models.User, error) {
 		Where("schema.id=?", schemaID).
 		First(user).Error
 }
+
+func DeleteSchema(db *gorm.DB, schema *models.Schema) error {
+	return db.Delete(schema).Error
+}

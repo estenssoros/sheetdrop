@@ -141,13 +141,12 @@ export default {
       const index = this.apis.indexOf(item);
       if (confirm("Are you sure you want to delete this item?")) {
         APIClient.deleteAPI(item)
-          .then((response) => {
-            console.log(response);
+          .then(() => {
+            this.apis.splice(index, 1);
           })
           .catch((error) => {
             console.log(error);
           });
-        this.apis.splice(index, 1);
       }
     },
 
@@ -174,8 +173,6 @@ export default {
     },
 
     handleSelection(item) {
-      console.log("asdf");
-      console.log(item);
       this.showSchemas = item.value;
       this.selectedAPI = item.item;
     },

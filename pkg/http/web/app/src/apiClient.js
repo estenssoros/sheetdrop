@@ -28,11 +28,14 @@ const APIClient = {
         return this.perform('get', `/api/${api.id}`);
     },
 
-    getSchemas(apiID){
-        return this.perform('get',`/schema/${apiID}`);
+    getSchemas(apiID) {
+        return this.perform('get', `/schema/${apiID}`);
     },
-    updateSchema(schema){
-        return this.perform('patch',`/schema`,schema)
+    updateSchema(schema) {
+        return this.perform('patch', `/schema`, schema)
+    },
+    deleteSchema(schema) {
+        return this.perform("delete", "/schema", schema)
     },
 
     async perform(method, resource, data) {

@@ -117,41 +117,63 @@ export default {
         this.editedIndex = -1;
       });
     },
-    save() {
-      var memIndex = this.editedIndex;
-      if (this.currentFile === undefined) {
-        APIClient.updateSchema(this.editedItem)
-          .then((response) => {
-            Object.assign(this.apis[memIndex], response);
+    deleteItem(item){
+      const index = this.schemas.indexOf(item);
+      if (confirm("Are you sure you want to delete this item?")) {
+        APIClient.deleteSchema(item)
+          .then(() => {
+            this.schemas.splice(index, 1);
           })
           .catch((error) => {
             console.log(error);
           });
-        this.close();
-        return;
       }
-      var schema = this.editedItem
-      schema.file = this.currentFile
-      FormClient.uploadSchemaFile(schema)
-        //   , (event) => {
-        //     this.progress = Math.round((100 * event.loaded) / event.total);
-        //   })
-        .then((response) => {
-          console.log(response);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-        this.close();
     },
+    save() {
+      var memIndex = this.editedIndex;
+      if (memIndex > -1) {
+        if (this.currentFile === undefined) {
+          APIClient.updateSchema(this.editedItem)
+            .then((response) => {
+              Object.assign(this.schemas[memIndex], response);
+            })
+            .catch((error) => {
+              console.log(error);
+            });
+          this.close();
+          return;
+        }
+        var schema = this.editedItem;
+        schema.file = this.currentFile;
+        FormClient.uploadSchemaFile(schema)
+          .then((response) => {
+            Object.assign(this.schemas[memIndex], response);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      } else {
+        var createSchema = this.editedItem;
+        createSchema.file = this.currentFile;
+        createSchema.api_id = this.ApiID;
+        FormClient.createNewSchema(createSchema)
+          .then((response) => {
+            Object.assign(this.schemas[memIndex], response);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+      this.close();
+    },
+
     editItem(item) {
       this.editedIndex = this.schemas.indexOf(item);
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
     },
+
     selectFile(file) {
-      console.log(file);
-      this.progress = 0;
       this.currentFile = file;
     },
   },

@@ -23,8 +23,8 @@ type Schema struct {
 	ID          int
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	APIID       int `gorm:"column:api_id"`
-	Name        *string
+	APIID       int     `gorm:"column:api_id" json:"api_id"`
+	Name        *string `gorm:"column:name"`
 	StartRow    int
 	StartColumn int
 	Headers     []*Header
@@ -39,5 +39,5 @@ func (s Schema) String() string {
 
 // TableName implements tablenameable
 func (s Schema) TableName() string {
-	return `schema`
+	return `api_schema`
 }

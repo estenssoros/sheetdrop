@@ -17,10 +17,13 @@ import (
 
 type ProcessFileInput struct {
 	User      string
-	APIID     *int `json:"api_id"`
+	SchemaID  *int    `form:"id"`
+	APIID     *int    `json:"api_id" form:"api_id"`
+	Name      *string `form:"name"`
 	FileName  string
 	Extension *string
 	File      multipart.File
+	NewSchema bool
 }
 
 func (input *ProcessFileInput) Validate(db *gorm.DB) error {
@@ -30,17 +33,23 @@ func (input *ProcessFileInput) Validate(db *gorm.DB) error {
 	if !common.ValidExtension(*input.Extension) {
 		return errors.Errorf("not valid extension: %s", *input.Extension)
 	}
-	if input.APIID != nil {
-		return nil
+	if input.APIID == nil {
+		return errors.New("schema missing api_id")
 	}
-	user, err := GetUserByName(db, input.User)
-	if err != nil {
-		return errors.Wrap(err, "GetUserByName")
+	if !input.NewSchema && input.SchemaID == nil {
+		return errors.New("schema missing id")
 	}
-	if err := db.Create(&models.API{UserID: user.ID}).Error; err != nil {
-		return errors.Wrap(err, "create api")
+	if input.Name == nil {
+		return errors.New("schema missing name")
 	}
 	return nil
+}
+func (input *ProcessFileInput) AddDataToModel(schema *models.Schema) {
+	if !input.NewSchema {
+		schema.ID = *input.SchemaID
+	}
+	schema.Name = input.Name
+	schema.APIID = *input.APIID
 }
 
 func ProcessFile(db *gorm.DB, input *ProcessFileInput) (*responses.ProcessFile, error) {
@@ -54,6 +63,7 @@ func ProcessFile(db *gorm.DB, input *ProcessFileInput) (*responses.ProcessFile, 
 	if err != nil {
 		return nil, errors.Wrap(err, "ioutil.ReadAll")
 	}
+
 	switch *input.Extension {
 	case constants.ExtensionExcel:
 		processor = func() (*models.Schema, error) {
@@ -69,6 +79,11 @@ func ProcessFile(db *gorm.DB, input *ProcessFileInput) (*responses.ProcessFile, 
 	schema, err := processor()
 	if err != nil {
 		return nil, errors.Wrap(err, *input.Extension)
+	}
+	input.AddDataToModel(schema)
+
+	if err := db.Save(schema).Error; err != nil {
+		return nil, errors.Wrap(err, "save schema")
 	}
 	return &responses.ProcessFile{
 		Schema: schema,

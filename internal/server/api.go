@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -22,15 +21,9 @@ func routes(e *echo.Group) {
 
 	e.GET("/schema/:apiID", getSchemaHandler)
 	e.PATCH("/schema", updateSchemaHandler)
-	e.POST("/file-upload", fileUploadHandler)
-	// e.POST("/login", loginHandler,
-	// 	middleware.CSRFWithConfig(middleware.CSRFConfig{
-	// 		TokenLookup: "form:csrf",
-	// 	}),
-	// )
-	// e.GET("/logout", logoutHandler, middleware.CSRFWithConfig(middleware.CSRFConfig{
-	// 	TokenLookup: "form:csrf",
-	// }))
+	e.DELETE("/schema", deleteSchemaHandler)
+	e.PATCH("/file-upload", schemaFilePatchHandler)
+	e.POST("/file-upload", schemaFileUploadHandler)
 }
 
 func createAPIHandler(c echo.Context) error {
@@ -114,22 +107,40 @@ func getAPIHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, apis)
 }
 
-func fileUploadHandler(c echo.Context) error {
-	fmt.Println(c.Request().Header)
+func schemaFilePatchHandler(c echo.Context) error {
+	input := &controllers.ProcessFileInput{}
+	if err := c.Bind(input); err != nil {
+		return responses.Error(c, http.StatusBadRequest, errors.Wrap(err, "c.Bind"))
+	}
+	input.User = c.Get(constants.ContextUserName).(string)
+	return fileUploadHandler(c, input)
+}
+
+func schemaFileUploadHandler(c echo.Context) error {
+	input := &controllers.ProcessFileInput{}
+	if err := c.Bind(input); err != nil {
+		return responses.Error(c, http.StatusBadRequest, errors.Wrap(err, "c.Bind"))
+	}
+	input.User = c.Get(constants.ContextUserName).(string)
+	input.NewSchema = true
+	return fileUploadHandler(c, input)
+}
+
+func fileUploadHandler(c echo.Context, input *controllers.ProcessFileInput) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return responses.Error(c, http.StatusBadRequest, errors.Wrap(err, "c.FormFile"))
 	}
+	input.FileName = file.Filename
+
 	multiPart, err := file.Open()
 	if err != nil {
 		return responses.Error(c, http.StatusInternalServerError, errors.Wrap(err, "file.Open"))
 	}
 
-	resp, err := controllers.ProcessFile(c.Get(constants.ContextDB).(*gorm.DB), &controllers.ProcessFileInput{
-		FileName: file.Filename,
-		File:     multiPart,
-		User:     c.Get(constants.ContextUserName).(string),
-	})
+	input.File = multiPart
+
+	resp, err := controllers.ProcessFile(c.Get(constants.ContextDB).(*gorm.DB), input)
 	if err != nil {
 		return responses.Error(c, http.StatusInternalServerError, errors.Wrap(err, "controllers.ProcessFile"))
 	}
@@ -172,34 +183,20 @@ func updateSchemaHandler(c echo.Context) error {
 	if err := c.Bind(input); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	db := c.Get(constants.ContextDB).(*gorm.DB)
-	schema, err := controllers.UpdateSchema(db, input)
+	schema, err := controllers.UpdateSchema(c.Get(constants.ContextDB).(*gorm.DB), input)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, schema)
 }
 
-// func loginHandler(c echo.Context) error {
-// 	input := &controllers.LoginInput{}
-// 	if err := c.Bind(input); err != nil {
-// 		return c.JSON(http.StatusBadRequest, err.Error())
-// 	}
-// 	if err := controllers.Login(c.Get(constants.ContextDB).(*gorm.DB), input); err != nil {
-// 		return c.JSON(http.StatusInternalServerError, err.Error())
-// 	}
-// 	sess, _ := session.Get("session", c)
-// 	sess.Values[constants.SessionLoggedIn] = true
-// 	sess.Values[constants.SessionUser] = *input.UserName
-// 	sess.Save(c.Request(), c.Response())
-// 	loggedIn, _ := sess.Values[constants.SessionLoggedIn].(bool)
-// 	return c.Render(http.StatusOK, "main", struct{ LoggedIn bool }{loggedIn})
-// }
-
-// func logoutHandler(c echo.Context) error {
-// 	sess, _ := session.Get("session", c)
-// 	sess.Values[constants.SessionLoggedIn] = true
-// 	delete(sess.Values, constants.SessionUser)
-// 	sess.Save(c.Request(), c.Response())
-// 	return c.Render(http.StatusOK, "login", c.Get("csrf").(string))
-// }
+func deleteSchemaHandler(c echo.Context) error {
+	schema := &models.Schema{}
+	if err := c.Bind(schema); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := controllers.DeleteSchema(c.Get(constants.ContextDB).(*gorm.DB), schema); err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.NoContent(http.StatusOK)
+}

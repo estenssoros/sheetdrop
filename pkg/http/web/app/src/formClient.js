@@ -11,6 +11,10 @@ const client = axios.create({
 
 const FormClient = {
     uploadSchemaFile(data) {
+        return this.upload('patch', '/file-upload', data)
+    },
+
+    createNewSchema(data){
         return this.upload('post', '/file-upload', data)
     },
 
