@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // User a user of the application
 type User struct {
@@ -13,4 +16,9 @@ type User struct {
 // TableName implements tablenameable
 func (u User) TableName() string {
 	return `user`
+}
+
+func (u User) String() string {
+	ju, _ := json.MarshalIndent(u, "", " ")
+	return string(ju)
 }
