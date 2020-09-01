@@ -27,6 +27,9 @@ func (input *ProcessFileInput) Validate(db *gorm.DB) error {
 	if input.Extension == nil {
 		input.Extension = helpers.StringPtr(filepath.Ext(input.FileName))
 	}
+	if !common.ValidExtension(*input.Extension) {
+		return errors.Errorf("not valid extension: %s", *input.Extension)
+	}
 	if input.APIID != nil {
 		return nil
 	}

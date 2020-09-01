@@ -7,10 +7,10 @@ import (
 
 var ErrUnknownExtension = errors.New("unknown extension")
 
-func CheckExtension(ext string) error {
+func ValidExtension(ext string) bool {
 	switch ext {
 	case constants.ExtensionCSV, constants.ExtensionExcel:
-		return nil
+		return true
 	}
-	return errors.Wrap(ErrUnknownExtension, ext)
+	return false
 }
