@@ -1,6 +1,6 @@
 package constants
 
 const (
-	ContextUser = "user"
-	ContextDB   = "db"
+	ContextDB       = "db"
+	ContextUserName = "userName"
 )
