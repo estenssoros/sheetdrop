@@ -24,6 +24,7 @@ type Schema struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	APIID       int `gorm:"column:api_id"`
+	Name        *string
 	StartRow    int
 	StartColumn int
 	Headers     []*Header
