@@ -5,6 +5,13 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+)
+
+var (
+	dialectMySQL = "mysql"
+	dialectMsSQL = "microsoft_sql"
 )
 
 type config struct {
@@ -63,4 +70,13 @@ func (c *config) urlMsSQL() string {
 		c.Host,
 		c.Database,
 	)
+}
+
+func (c *config) dialector() gorm.Dialector {
+	switch c.Dialect {
+	case dialectMySQL:
+		return mysql.Open(c.urlMySQL())
+	default:
+		return nil
+	}
 }

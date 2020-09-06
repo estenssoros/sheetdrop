@@ -22,14 +22,13 @@ var migrateCmd = &cobra.Command{
 		if err != nil {
 			return errors.Wrap(err, "orm.Connect")
 		}
-		defer db.Close()
 		for _, model := range models.Models {
 			if drop {
-				if err := db.DropTable(model).Error; err != nil {
+				if err := db.Migrator().DropTable(model); err != nil {
 					return errors.Wrap(err, "orm.DropTableMsSQL")
 				}
 			}
-			if err := db.AutoMigrate(model).Error; err != nil {
+			if err := db.AutoMigrate(model); err != nil {
 				return errors.Wrap(err, "db.Automigrate")
 			}
 		}

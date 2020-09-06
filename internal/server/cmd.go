@@ -30,7 +30,6 @@ func run() error {
 	if err != nil {
 		return errors.Wrap(err, "orm.Connect")
 	}
-	defer db.Close()
 	e.Use(middle.DBInjector(db))
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{

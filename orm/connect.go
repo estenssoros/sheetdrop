@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	_ "gorm.io/driver/mysql" //mysql driver
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // ConnectTimeout times out after 5 seconds
@@ -57,18 +58,11 @@ func connect() (*gorm.DB, error) {
 
 func connectConfig(conf *config) (*gorm.DB, error) {
 	logrus.Info(conf)
-	url, err := conf.URL()
-	if err != nil {
-		return nil, errors.Wrap(err, "conf.URL")
-	}
-	db, err := gorm.Open(conf.driverName(), url)
+	db, err := gorm.Open(conf.dialector(), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "open db")
-	}
-	db.DB().SetMaxIdleConns(0)
-	db.LogMode(true)
-	if err := db.DB().Ping(); err != nil {
-		return nil, err
 	}
 	return db, nil
 }

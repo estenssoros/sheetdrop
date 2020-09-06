@@ -12,7 +12,6 @@ func TestGetUserFromAPIID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
 	user, err := GetUserFromAPIID(db, 1)
 	if err != nil {
 		t.Fatal(err)
