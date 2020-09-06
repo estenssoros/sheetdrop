@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"github.com/estenssoros/sheetdrop/internal/models"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 func GetSchemasForAPI(db *gorm.DB, api *models.API) ([]*models.Schema, error) {

@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/estenssoros/sheetdrop/internal/models"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 func GetUserAPIs(db *gorm.DB, user *models.User) ([]*models.API, error) {

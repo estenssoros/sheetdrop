@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/schollz/progressbar/v3"
+	"gorm.io/gorm"
 )
 
 var (

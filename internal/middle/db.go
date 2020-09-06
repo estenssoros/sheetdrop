@@ -2,8 +2,8 @@ package middle
 
 import (
 	"github.com/estenssoros/sheetdrop/constants"
-	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 )
 
 func DBInjector(db *gorm.DB) echo.MiddlewareFunc {

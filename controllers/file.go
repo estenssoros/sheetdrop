@@ -11,8 +11,8 @@ import (
 	"github.com/estenssoros/sheetdrop/internal/models"
 	"github.com/estenssoros/sheetdrop/internal/process"
 	"github.com/estenssoros/sheetdrop/responses"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 type ProcessFileInput struct {

@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/estenssoros/sheetdrop/internal/models"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 func GetUserByName(db *gorm.DB, userName string) (*models.User, error) {

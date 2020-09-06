@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 type LoginInput struct {

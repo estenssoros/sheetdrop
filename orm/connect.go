@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/estenssoros/sheetdrop/constants"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql" //mysql driver
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	_ "gorm.io/driver/mysql" //mysql driver
+	"gorm.io/gorm"
 )
 
 // ConnectTimeout times out after 5 seconds

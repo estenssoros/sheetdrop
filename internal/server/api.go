@@ -8,9 +8,9 @@ import (
 	"github.com/estenssoros/sheetdrop/controllers"
 	"github.com/estenssoros/sheetdrop/internal/models"
 	"github.com/estenssoros/sheetdrop/responses"
-	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 func routes(e *echo.Group) {
