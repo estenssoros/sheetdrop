@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/estenssoros/sheetdrop/internal/models"
+	"github.com/estenssoros/sheetdrop/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -53,4 +53,37 @@ func GetUserFromSchemaID(db *gorm.DB, schemaID int) (*models.User, error) {
 
 func DeleteSchema(db *gorm.DB, schema *models.Schema) error {
 	return db.Delete(schema).Error
+}
+
+func SchemaByID(db *gorm.DB, schemaID uint) (*models.Schema, error) {
+	schema := &models.Schema{}
+	return schema, db.Where("id=?", schemaID).First(schema).Error
+}
+
+func GetSchemaRelations(db *gorm.DB, schemas []*models.Schema) error {
+	ids := make([]uint, len(schemas))
+	for i := 0; i < len(schemas); i++ {
+		ids[i] = schemas[i].ID
+	}
+	headersMap := map[uint][]*models.Header{}
+	{
+		headers := []*models.Header{}
+		if err := db.Where("schema_id IN (?)", ids).Order("idx").Find(&headers).Error; err != nil {
+			return err
+		}
+		for _, h := range headers {
+			if headers, ok := headersMap[h.SchemaID]; ok {
+				headers = append(headers, h)
+				headersMap[h.SchemaID] = headers
+			} else {
+				headersMap[h.SchemaID] = []*models.Header{h}
+			}
+		}
+	}
+	for _, schema := range schemas {
+		if headers, ok := headersMap[schema.ID]; ok {
+			schema.Headers = headers
+		}
+	}
+	return nil
 }
