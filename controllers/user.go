@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/estenssoros/sheetdrop/internal/models"
+	"github.com/estenssoros/sheetdrop/models"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +15,7 @@ func GetOrCreateUserByName(db *gorm.DB, userName string) (*models.User, error) {
 	return user, db.Where(models.User{UserName: userName}).FirstOrCreate(user).Error
 }
 
-func GetUserByID(db *gorm.DB, userID int) (*models.User, error) {
+func GetUserByID(db *gorm.DB, userID uint) (*models.User, error) {
 	user := &models.User{}
 	return user, db.Where("id=?", userID).First(user).Error
 }
