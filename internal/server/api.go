@@ -6,7 +6,7 @@ import (
 
 	"github.com/estenssoros/sheetdrop/constants"
 	"github.com/estenssoros/sheetdrop/controllers"
-	"github.com/estenssoros/sheetdrop/internal/models"
+	"github.com/estenssoros/sheetdrop/models"
 	"github.com/estenssoros/sheetdrop/responses"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
@@ -164,14 +164,21 @@ func getSchemaHandler(c echo.Context) error {
 	if user.UserName != c.Get(constants.ContextUserName).(string) {
 		return c.JSON(http.StatusForbidden, "user names do not match")
 	}
-	schemas, err := controllers.GetSchemasForAPI(db, &models.API{ID: apiID})
+	schemas, err := controllers.GetSchemasForAPI(db, &models.API{
+		Model: gorm.Model{ID: uint(apiID)},
+	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	if len(schemas) > 0 {
+		if err := controllers.GetSchemaRelations(db, schemas); err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
 		return c.JSON(http.StatusOK, schemas)
 	}
-	schema, err := controllers.CreateSchemaForAPI(db, &models.API{ID: apiID})
+	schema, err := controllers.CreateSchemaForAPI(db, &models.API{
+		Model: gorm.Model{ID: uint(apiID)},
+	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
