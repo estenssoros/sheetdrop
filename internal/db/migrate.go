@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/estenssoros/sheetdrop/internal/models"
+	"github.com/estenssoros/sheetdrop/models"
 	"github.com/estenssoros/sheetdrop/orm"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
