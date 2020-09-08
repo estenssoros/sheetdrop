@@ -2,7 +2,8 @@ package models
 
 import (
 	"encoding/json"
-	"time"
+
+	"gorm.io/gorm"
 )
 
 const (
@@ -20,10 +21,8 @@ const (
 
 // Schema source information for data
 type Schema struct {
-	ID          int
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	APIID       int     `gorm:"column:api_id" json:"api_id"`
+	gorm.Model
+	APIID       uint    `gorm:"column:api_id" json:"api_id"`
 	Name        *string `gorm:"column:name"`
 	StartRow    int
 	StartColumn int
