@@ -8,17 +8,16 @@ import (
 	"github.com/estenssoros/sheetdrop/constants"
 	"github.com/estenssoros/sheetdrop/internal/common"
 	"github.com/estenssoros/sheetdrop/internal/helpers"
-	"github.com/estenssoros/sheetdrop/internal/models"
 	"github.com/estenssoros/sheetdrop/internal/process"
-	"github.com/estenssoros/sheetdrop/responses"
+	"github.com/estenssoros/sheetdrop/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 type ProcessFileInput struct {
 	User      string
-	SchemaID  *int    `form:"id"`
-	APIID     *int    `json:"api_id" form:"api_id"`
+	SchemaID  *uint   `form:"id"`
+	APIID     *uint   `json:"api_id" form:"api_id"`
 	Name      *string `form:"name"`
 	FileName  string
 	Extension *string
@@ -44,21 +43,25 @@ func (input *ProcessFileInput) Validate(db *gorm.DB) error {
 	}
 	return nil
 }
-func (input *ProcessFileInput) AddDataToModel(schema *models.Schema) {
-	if !input.NewSchema {
-		schema.ID = *input.SchemaID
-	}
-	schema.Name = input.Name
-	schema.APIID = *input.APIID
-}
 
-func ProcessFile(db *gorm.DB, input *ProcessFileInput) (*responses.ProcessFile, error) {
-
+func ProcessFile(db *gorm.DB, input *ProcessFileInput) (schema *models.Schema, err error) {
 	if err := input.Validate(db); err != nil {
 		return nil, errors.Wrap(err, "input.Validate")
 	}
+	if *input.SchemaID != 0 {
+		schema, err = SchemaByID(db, *input.SchemaID)
+		if err != nil {
+			return nil, errors.Wrap(err, "SchemaByID")
+		}
+		schema.Name = input.Name
+	} else {
+		schema = &models.Schema{
+			APIID: *input.APIID,
+			Name:  input.Name,
+		}
+	}
 
-	var processor = func() (*models.Schema, error) { return nil, nil }
+	var processor = func() error { return nil }
 	data, err := ioutil.ReadAll(input.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "ioutil.ReadAll")
@@ -66,26 +69,21 @@ func ProcessFile(db *gorm.DB, input *ProcessFileInput) (*responses.ProcessFile, 
 
 	switch *input.Extension {
 	case constants.ExtensionExcel:
-		processor = func() (*models.Schema, error) {
-			return process.Excel(data)
+		processor = func() error {
+			return process.Excel(schema, data)
 		}
 	case constants.ExtensionCSV:
-		processor = func() (*models.Schema, error) {
-			return process.CSV(data)
+		processor = func() error {
+			return process.CSV(schema, data)
 		}
 	default:
 		return nil, errors.Wrap(common.ErrUnknownExtension, *input.Extension)
 	}
-	schema, err := processor()
-	if err != nil {
+	if err := processor(); err != nil {
 		return nil, errors.Wrap(err, *input.Extension)
 	}
-	input.AddDataToModel(schema)
-
 	if err := db.Save(schema).Error; err != nil {
 		return nil, errors.Wrap(err, "save schema")
 	}
-	return &responses.ProcessFile{
-		Schema: schema,
-	}, nil
+	return schema, nil
 }
