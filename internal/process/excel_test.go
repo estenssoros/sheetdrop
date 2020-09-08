@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/estenssoros/sheetdrop/models"
 	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +18,7 @@ func TestExcel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := Excel(data)
-	assert.Nil(t, err)
-	fmt.Println(out)
+	schema := &models.Schema{}
+	assert.Nil(t, Excel(schema, data))
+	fmt.Println(schema)
 }

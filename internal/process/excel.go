@@ -3,7 +3,7 @@ package process
 import (
 	"github.com/estenssoros/sheetdrop/constants"
 	"github.com/estenssoros/sheetdrop/internal/helpers"
-	"github.com/estenssoros/sheetdrop/internal/models"
+	"github.com/estenssoros/sheetdrop/models"
 	"github.com/pkg/errors"
 	"github.com/satori/uuid"
 	"github.com/sirupsen/logrus"
@@ -11,48 +11,46 @@ import (
 )
 
 // Excel processes an excel row into a schema
-func Excel(data []byte) (*models.Schema, error) {
+func Excel(schema *models.Schema, data []byte) error {
 	logrus.Info("processing excel")
 	xlFile, err := xlsx.OpenBinaryWithRowLimit(data, constants.InitialRowLimit)
 	if err != nil {
-		return nil, errors.Wrap(err, "xlsx.OpenBinary")
+		return errors.Wrap(err, "xlsx.OpenBinary")
 	}
 
 	if len(xlFile.Sheets) < 1 {
-		return nil, errors.New("no sheets")
+		return errors.New("no sheets")
 	}
-	schema, err := excelSheet(xlFile.Sheets[0])
-	if err != nil {
-		return nil, errors.Wrap(err, "excelSheet")
+	if err := excelSheet(schema, xlFile.Sheets[0]); err != nil {
+		return errors.Wrap(err, "excelSheet")
 	}
-	return schema, nil
+	return nil
 }
 
-func excelSheet(sheet *xlsx.Sheet) (*models.Schema, error) {
+func excelSheet(schema *models.Schema, sheet *xlsx.Sheet) error {
 	if !sheetHasData(sheet) {
-		return nil, errors.New("no data")
+		return errors.New("no data")
 	}
 	startRow, err := sheetStartRow(sheet)
 	if err != nil {
-		return nil, errors.Wrap(err, "sheetStartRow")
+		return errors.Wrap(err, "sheetStartRow")
 	}
 	startColumn, err := sheetStartColumn(sheet, startRow)
 	if err != nil {
-		return nil, errors.Wrap(err, "sheetStartColumn")
+		return errors.Wrap(err, "sheetStartColumn")
 	}
 	headers, err := sheetHeaders(sheet, startRow, startColumn)
 	if err != nil {
-		return nil, errors.Wrap(err, "sheetHeader")
+		return errors.Wrap(err, "sheetHeader")
 	}
 	if err := sheetDataTypes(sheet, startRow, headers); err != nil {
-		return nil, errors.Wrap(err, "sheetDataTypes")
+		return errors.Wrap(err, "sheetDataTypes")
 	}
-	return &models.Schema{
-		StartRow:    startRow,
-		StartColumn: startColumn,
-		Headers:     headers,
-		SourceType:  constants.SourceTypeExcel,
-	}, nil
+	schema.StartRow = startRow
+	schema.StartColumn = startColumn
+	schema.Headers = headers
+	schema.SourceType = constants.SourceTypeExcel
+	return nil
 }
 
 func sheetHasData(sheet *xlsx.Sheet) bool {

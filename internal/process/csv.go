@@ -9,13 +9,13 @@ import (
 
 	"github.com/estenssoros/sheetdrop/constants"
 	"github.com/estenssoros/sheetdrop/internal/helpers"
-	"github.com/estenssoros/sheetdrop/internal/models"
+	"github.com/estenssoros/sheetdrop/models"
 	"github.com/pkg/errors"
 	"github.com/satori/uuid"
 	"github.com/sirupsen/logrus"
 )
 
-func CSV(data []byte) (*models.Schema, error) {
+func CSV(schema *models.Schema, data []byte) error {
 	logrus.Info("processing csv")
 	r := csv.NewReader(bytes.NewReader(data))
 	headers := []*models.Header{}
@@ -27,12 +27,12 @@ func CSV(data []byte) (*models.Schema, error) {
 			break
 		}
 		if err != nil {
-			return nil, errors.Wrap(err, "reader.Read")
+			return errors.Wrap(err, "reader.Read")
 		}
 		if len(headers) == 0 {
 			hs, err := csvHeaders(row)
 			if err != nil {
-				return nil, errors.Wrap(err, "csvHeaders")
+				return errors.Wrap(err, "csvHeaders")
 			}
 			headers = hs
 			continue
@@ -44,14 +44,15 @@ func CSV(data []byte) (*models.Schema, error) {
 		}
 	}
 	if err := csvDataTypes(rows, headers); err != nil {
-		return nil, errors.Wrap(err, "csvDataTypes")
+		return errors.Wrap(err, "csvDataTypes")
 	}
-	return &models.Schema{
-		StartRow:    1,
-		StartColumn: 1,
-		Headers:     headers,
-		SourceType:  constants.SourceTypeCSV,
-	}, nil
+
+	schema.StartRow = 1
+	schema.StartColumn = 1
+	schema.Headers = headers
+	schema.SourceType = constants.SourceTypeCSV
+
+	return nil
 }
 
 func csvHeaders(row []string) ([]*models.Header, error) {
