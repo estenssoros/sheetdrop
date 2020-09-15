@@ -2,20 +2,25 @@ package controllers
 
 import (
 	"github.com/estenssoros/sheetdrop/models"
-	"gorm.io/gorm"
 )
 
-func GetUserByName(db *gorm.DB, userName string) (*models.User, error) {
+type User interface {
+	GetUserByName(string) (*models.User, error)
+	GetOrCreateUserByName(string) (*models.User, error)
+	GetUserByID(uint) (*models.User, error)
+}
+
+func (db *Controller) GetUserByName(userName string) (*models.User, error) {
 	user := &models.User{}
 	return user, db.Where("user_name=?", userName).First(user).Error
 }
 
-func GetOrCreateUserByName(db *gorm.DB, userName string) (*models.User, error) {
+func (db *Controller) GetOrCreateUserByName(userName string) (*models.User, error) {
 	user := &models.User{}
 	return user, db.Where(models.User{UserName: userName}).FirstOrCreate(user).Error
 }
 
-func GetUserByID(db *gorm.DB, userID uint) (*models.User, error) {
+func (db *Controller) GetUserByID(userID uint) (*models.User, error) {
 	user := &models.User{}
 	return user, db.Where("id=?", userID).First(user).Error
 }

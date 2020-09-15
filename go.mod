@@ -5,7 +5,9 @@ go 1.14
 require (
 	github.com/GeertJohan/go.rice v1.0.0
 	github.com/aws/aws-sdk-go v1.34.10
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fatih/color v1.9.0
+	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/gorilla/sessions v1.2.1
 	github.com/iancoleman/strcase v0.1.0
 	github.com/labstack/echo-contrib v0.9.0

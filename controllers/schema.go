@@ -6,6 +6,16 @@ import (
 	"gorm.io/gorm"
 )
 
+type Schema interface {
+	GetSchemasForAPI(*models.API) ([]*models.Schema, error)
+	CreateSchemaForAPI(*models.API) (*models.Schema, error)
+	UpdateSchema(*UpdateSchemaInput) (*models.Schema, error)
+	GetUserFromSchemaID(schemaID uint) (*models.User, error)
+	DeleteSchema(*models.Schema) error
+	SchemaByID(uint) (*models.Schema, error)
+	GetSchemaRelations([]*models.Schema) error
+}
+
 func GetSchemasForAPI(db *gorm.DB, api *models.API) ([]*models.Schema, error) {
 	schemas := []*models.Schema{}
 	return schemas, db.Where("api_id=?", api.ID).Find(&schemas).Error
@@ -42,7 +52,7 @@ func UpdateSchema(db *gorm.DB, input *UpdateSchemaInput) (*models.Schema, error)
 	return schema, db.Save(schema).Error
 }
 
-func GetUserFromSchemaID(db *gorm.DB, schemaID int) (*models.User, error) {
+func GetUserFromSchemaID(db *gorm.DB, schemaID uint) (*models.User, error) {
 	user := &models.User{}
 	return user, db.Model(user).
 		Joins("JOIN api ON api.user_id = user.id").

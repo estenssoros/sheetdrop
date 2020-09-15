@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 
+	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
 
@@ -27,8 +28,14 @@ type Schema struct {
 	StartRow    int
 	StartColumn int
 	Headers     []*Header
-	SourceType  string `gorm:"varchar(10)"`
+	SourceType  string `gorm:"type:varchar(10)"`
 	SourceURI   string
+	AuthToken   uuid.UUID `gorm:"type:varchar(36);unique"`
+}
+
+func (s *Schema) BeforeCreate(tx *gorm.DB) error {
+	s.AuthToken = uuid.Must(uuid.NewV4())
+	return nil
 }
 
 func (s Schema) String() string {

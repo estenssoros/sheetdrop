@@ -6,4 +6,6 @@ var Models = []interface{}{
 	&Header{},
 	&Schema{},
 	&User{},
+	&Organization{},
+	&OrganizationUser{},
 }

@@ -61,6 +61,8 @@ func ProcessFile(db *gorm.DB, input *ProcessFileInput) (schema *models.Schema, e
 		}
 	}
 
+	schema.SourceURI = input.FileName
+
 	var processor = func() error { return nil }
 	data, err := ioutil.ReadAll(input.File)
 	if err != nil {
@@ -81,6 +83,9 @@ func ProcessFile(db *gorm.DB, input *ProcessFileInput) (schema *models.Schema, e
 	}
 	if err := processor(); err != nil {
 		return nil, errors.Wrap(err, *input.Extension)
+	}
+	if err := db.Where("schema_id=?", schema.ID).Delete(&models.Header{}).Error; err != nil {
+		return nil, errors.Wrap(err, "delete old headers")
 	}
 	if err := db.Save(schema).Error; err != nil {
 		return nil, errors.Wrap(err, "save schema")

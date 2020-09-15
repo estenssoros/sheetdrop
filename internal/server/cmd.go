@@ -39,7 +39,7 @@ func run() error {
 	e.Use(middleware.CORS())
 	routes(e.Group(
 		"/api",
-		middle.OktaAuth(),
+		middle.Auth(),
 	))
 	return e.Start(":1323")
 }

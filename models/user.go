@@ -6,17 +6,10 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	LevelAdmin = iota
-	LevelFree
-	LevelPaid1
-)
-
 // User a user of the application
 type User struct {
 	gorm.Model
 	UserName string `gorm:"type:varchar(50)"`
-	Level    int
 	APIs     []*API
 }
 

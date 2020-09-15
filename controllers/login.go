@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 type LoginInput struct {
@@ -16,10 +15,10 @@ func (i *LoginInput) Validate() error {
 	return nil
 }
 
-func Login(db *gorm.DB, input *LoginInput) error {
+func (db *Controller) Login(input *LoginInput) error {
 	if err := input.Validate(); err != nil {
 		return errors.Wrap(err, "input.Validate")
 	}
-	_, err := GetUserByName(db, *input.UserName)
+	_, err := db.GetUserByName(*input.UserName)
 	return err
 }
