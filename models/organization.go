@@ -12,7 +12,7 @@ const (
 
 type Organization struct {
 	gorm.Model
-	Name         string
+	Name         *string
 	AccountLevel int
 }
 
