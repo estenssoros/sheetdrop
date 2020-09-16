@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/estenssoros/sheetdrop/controllers"
 	"github.com/estenssoros/sheetdrop/internal/middle"
 	"github.com/estenssoros/sheetdrop/orm"
 	"github.com/gorilla/sessions"
@@ -30,7 +31,7 @@ func run() error {
 	if err != nil {
 		return errors.Wrap(err, "orm.Connect")
 	}
-	e.Use(middle.DBInjector(db))
+	e.Use(middle.DBInjector(controllers.New(db)))
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
