@@ -14,6 +14,10 @@ import (
 	"gorm.io/gorm"
 )
 
+type File interface {
+	ProcessFile(*ProcessFileInput) (schema *models.Schema, err error)
+}
+
 type ProcessFileInput struct {
 	User      string
 	SchemaID  *uint   `form:"id"`
@@ -44,12 +48,12 @@ func (input *ProcessFileInput) Validate(db *gorm.DB) error {
 	return nil
 }
 
-func ProcessFile(db *gorm.DB, input *ProcessFileInput) (schema *models.Schema, err error) {
-	if err := input.Validate(db); err != nil {
+func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema, err error) {
+	if err := c.Validate(input); err != nil {
 		return nil, errors.Wrap(err, "input.Validate")
 	}
 	if *input.SchemaID != 0 {
-		schema, err = SchemaByID(db, *input.SchemaID)
+		schema, err = c.SchemaByID(*input.SchemaID)
 		if err != nil {
 			return nil, errors.Wrap(err, "SchemaByID")
 		}
@@ -84,10 +88,10 @@ func ProcessFile(db *gorm.DB, input *ProcessFileInput) (schema *models.Schema, e
 	if err := processor(); err != nil {
 		return nil, errors.Wrap(err, *input.Extension)
 	}
-	if err := db.Where("schema_id=?", schema.ID).Delete(&models.Header{}).Error; err != nil {
+	if err := c.DB().Where("schema_id=?", schema.ID).Delete(&models.Header{}).Error; err != nil {
 		return nil, errors.Wrap(err, "delete old headers")
 	}
-	if err := db.Save(schema).Error; err != nil {
+	if err := c.DB().Save(schema).Error; err != nil {
 		return nil, errors.Wrap(err, "save schema")
 	}
 	return schema, nil

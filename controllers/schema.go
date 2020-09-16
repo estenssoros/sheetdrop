@@ -16,16 +16,16 @@ type Schema interface {
 	GetSchemaRelations([]*models.Schema) error
 }
 
-func GetSchemasForAPI(db *gorm.DB, api *models.API) ([]*models.Schema, error) {
+func (c *Controller) GetSchemasForAPI(api *models.API) ([]*models.Schema, error) {
 	schemas := []*models.Schema{}
-	return schemas, db.Where("api_id=?", api.ID).Find(&schemas).Error
+	return schemas, c.db.Where("api_id=?", api.ID).Find(&schemas).Error
 }
 
-func CreateSchemaForAPI(db *gorm.DB, api *models.API) (*models.Schema, error) {
+func (c *Controller) CreateSchemaForAPI(api *models.API) (*models.Schema, error) {
 	schema := &models.Schema{
 		APIID: api.ID,
 	}
-	return schema, db.Create(schema).Error
+	return schema, c.db.Create(schema).Error
 }
 
 type UpdateSchemaInput struct {
@@ -33,7 +33,7 @@ type UpdateSchemaInput struct {
 	Name *string
 }
 
-func (input *UpdateSchemaInput) Validate() error {
+func (input *UpdateSchemaInput) Validate(db *gorm.DB) error {
 	if input.ID == nil {
 		return errors.New("missing id")
 	}
@@ -43,34 +43,37 @@ func (input *UpdateSchemaInput) Validate() error {
 	return nil
 }
 
-func UpdateSchema(db *gorm.DB, input *UpdateSchemaInput) (*models.Schema, error) {
+func (c *Controller) UpdateSchema(input *UpdateSchemaInput) (*models.Schema, error) {
+	if err := c.Validate(input); err != nil {
+		return nil, errors.Wrap(err, "validate")
+	}
 	schema := &models.Schema{}
-	if err := db.Where("id=?", *input.ID).First(schema).Error; err != nil {
+	if err := c.db.Where("id=?", *input.ID).First(schema).Error; err != nil {
 		return nil, err
 	}
 	schema.Name = input.Name
-	return schema, db.Save(schema).Error
+	return schema, c.db.Save(schema).Error
 }
 
-func GetUserFromSchemaID(db *gorm.DB, schemaID uint) (*models.User, error) {
+func (c *Controller) GetUserFromSchemaID(schemaID uint) (*models.User, error) {
 	user := &models.User{}
-	return user, db.Model(user).
+	return user, c.db.Model(user).
 		Joins("JOIN api ON api.user_id = user.id").
 		Joins("JOIN schema ON schema.api_id = api.id").
 		Where("schema.id=?", schemaID).
 		First(user).Error
 }
 
-func DeleteSchema(db *gorm.DB, schema *models.Schema) error {
-	return db.Delete(schema).Error
+func (c *Controller) DeleteSchema(schema *models.Schema) error {
+	return c.db.Delete(schema).Error
 }
 
-func SchemaByID(db *gorm.DB, schemaID uint) (*models.Schema, error) {
+func (c *Controller) SchemaByID(schemaID uint) (*models.Schema, error) {
 	schema := &models.Schema{}
-	return schema, db.Where("id=?", schemaID).First(schema).Error
+	return schema, c.db.Where("id=?", schemaID).First(schema).Error
 }
 
-func GetSchemaRelations(db *gorm.DB, schemas []*models.Schema) error {
+func (c *Controller) GetSchemaRelations(schemas []*models.Schema) error {
 	ids := make([]uint, len(schemas))
 	for i := 0; i < len(schemas); i++ {
 		ids[i] = schemas[i].ID
@@ -78,7 +81,7 @@ func GetSchemaRelations(db *gorm.DB, schemas []*models.Schema) error {
 	headersMap := map[uint][]*models.Header{}
 	{
 		headers := []*models.Header{}
-		if err := db.Where("schema_id IN (?)", ids).Order("idx").Find(&headers).Error; err != nil {
+		if err := c.db.Where("schema_id IN (?)", ids).Order("idx").Find(&headers).Error; err != nil {
 			return err
 		}
 		for _, h := range headers {
