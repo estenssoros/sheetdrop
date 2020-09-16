@@ -22,7 +22,7 @@ func getSchemaHandler(c echo.Context) error {
 	if apiID == 0 {
 		return c.JSON(http.StatusBadRequest, "no id sent")
 	}
-	ctl := c.Get(constants.ContextDB).(controllers.Interface)
+	ctl := extractController(c)
 	user, err := ctl.GetUserFromAPIID(uint(apiID))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -56,7 +56,8 @@ func updateSchemaHandler(c echo.Context) error {
 	if err := c.Bind(input); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	schema, err := controllers.UpdateSchema(c.Get(constants.ContextDB).(*gorm.DB), input)
+	ctl := extractController(c)
+	schema, err := ctl.UpdateSchema(input)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -68,7 +69,8 @@ func deleteSchemaHandler(c echo.Context) error {
 	if err := c.Bind(schema); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	if err := controllers.DeleteSchema(c.Get(constants.ContextDB).(*gorm.DB), schema); err != nil {
+	ctl := extractController(c)
+	if err := ctl.DeleteSchema(schema); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)
@@ -106,8 +108,8 @@ func fileUploadHandler(c echo.Context, input *controllers.ProcessFileInput) erro
 	}
 
 	input.File = multiPart
-
-	resp, err := controllers.ProcessFile(c.Get(constants.ContextDB).(*gorm.DB), input)
+	ctl := extractController(c)
+	resp, err := ctl.ProcessFile(input)
 	if err != nil {
 		return responses.Error(c, http.StatusInternalServerError, errors.Wrap(err, "controllers.ProcessFile"))
 	}

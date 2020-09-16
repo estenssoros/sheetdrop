@@ -5,14 +5,13 @@ import (
 	"strconv"
 
 	"github.com/estenssoros/sheetdrop/constants"
-	"github.com/estenssoros/sheetdrop/controllers"
 	"github.com/estenssoros/sheetdrop/models"
 	"github.com/labstack/echo/v4"
 )
 
 func getAPIHandler(c echo.Context) error {
 	apiID, err := strconv.Atoi(c.Param("id"))
-	ctl := c.Get(constants.ContextController).(controllers.Interface)
+	ctl := extractController(c)
 	user, err := ctl.GetUserFromAPIID(uint(apiID))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -35,7 +34,7 @@ func createAPIHandler(c echo.Context) error {
 	if api.Name == nil {
 		return c.JSON(http.StatusBadRequest, "missing api name")
 	}
-	ctl := c.Get(constants.ContextController).(controllers.Interface)
+	ctl := extractController(c)
 	user, err := ctl.GetUserByName(c.Get(constants.ContextUserName).(string))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -55,7 +54,7 @@ func deleteAPIHandler(c echo.Context) error {
 	if err := c.Bind(api); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	ctl := c.Get(constants.ContextController).(controllers.Interface)
+	ctl := extractController(c)
 	user, err := ctl.GetUserByID(api.UserID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -75,7 +74,7 @@ func updateAPIHandler(c echo.Context) error {
 	if err := c.Bind(api); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	ctl := c.Get(constants.ContextController).(controllers.Interface)
+	ctl := extractController(c)
 	user, err := ctl.GetUserByID(api.UserID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -92,7 +91,7 @@ func updateAPIHandler(c echo.Context) error {
 
 func getAPIsHandler(c echo.Context) error {
 	userName := c.Get(constants.ContextUserName).(string)
-	ctl := c.Get(constants.ContextDB).(controllers.Interface)
+	ctl := extractController(c)
 	user, err := ctl.GetOrCreateUserByName(userName)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
