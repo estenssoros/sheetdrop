@@ -88,9 +88,32 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 	if err := processor(); err != nil {
 		return nil, errors.Wrap(err, *input.Extension)
 	}
-	if err := c.DB().Where("schema_id=?", schema.ID).Delete(&models.Header{}).Error; err != nil {
-		return nil, errors.Wrap(err, "delete old headers")
+	headerSet, err := c.GetSchemaHeadersSet(schema)
+	{
+		headers := headerSet.ToCreate(schema.Headers)
+		if len(headers) > 0 {
+			if err := c.db.Create(headers).Error; err != nil {
+				return nil, errors.Wrap(err, "createHeaders")
+			}
+		}
 	}
+	{
+		headers := headerSet.ToUpdate(schema.Headers)
+		if len(headers) > 0 {
+			if err := c.db.Save(headers).Error; err != nil {
+				return nil, errors.Wrap(err, "createHeaders")
+			}
+		}
+	}
+	{
+		headers := headerSet.ToDelete(schema.Headers)
+		if len(headers) > 0 {
+			if err := c.db.Delete(headers).Error; err != nil {
+				return nil, errors.Wrap(err, "createHeaders")
+			}
+		}
+	}
+
 	if err := c.DB().Save(schema).Error; err != nil {
 		return nil, errors.Wrap(err, "save schema")
 	}
