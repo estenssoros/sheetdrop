@@ -118,7 +118,7 @@ func sheetHeaders(sheet *xlsx.Sheet, startRow, startColumn int) (headers []*mode
 		}
 		headers = append(headers, &models.Header{
 			Name:  headerName,
-			Index: startColumn + i})
+			Index: uint(startColumn + i)})
 	}
 	return headers, nil
 }
@@ -130,7 +130,7 @@ func sheetDataTypes(sheet *xlsx.Sheet, startRow int, headers []*models.Header) (
 		}
 	}()
 	for _, header := range headers {
-		dataType, err := columnDataTypeExcel(sheet.Rows[startRow+1:], header.Index)
+		dataType, err := columnDataTypeExcel(sheet.Rows[startRow+1:], int(header.Index))
 		if err != nil {
 			return errors.Wrap(err, "columnDataType")
 		}

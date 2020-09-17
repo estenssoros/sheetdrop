@@ -65,7 +65,7 @@ func csvHeaders(row []string) ([]*models.Header, error) {
 		}
 		headers = append(headers, &models.Header{
 			Name:  headerName,
-			Index: i,
+			Index: uint(i),
 		})
 	}
 	return headers, nil
@@ -73,7 +73,7 @@ func csvHeaders(row []string) ([]*models.Header, error) {
 
 func csvDataTypes(rows [][]string, headers []*models.Header) error {
 	for _, header := range headers {
-		dataType, err := columnDataTypeCSV(rows, header.Index)
+		dataType, err := columnDataTypeCSV(rows, int(header.Index))
 		if err != nil {
 			return errors.Wrap(err, "columnDataTypeCSV")
 		}
