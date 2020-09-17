@@ -29,6 +29,10 @@ func schemaRoutes(e *echo.Group) {
 	e.GET("/schema/:apiID", getSchemaHandler)
 	e.PATCH("/schema", updateSchemaHandler)
 	e.DELETE("/schema", deleteSchemaHandler)
-	e.PATCH("/file-upload", schemaFilePatchHandler)
-	e.POST("/file-upload", schemaFileUploadHandler)
+	e.PATCH("/schema/file-upload", schemaFilePatchHandler)
+	e.POST("/schema/file-upload", schemaFileUploadHandler)
+}
+
+func restRoutes(e *echo.Group) {
+	e.GET("/:url", handleRest)
 }

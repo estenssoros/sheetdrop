@@ -4,8 +4,6 @@ import (
 	"github.com/estenssoros/sheetdrop/controllers"
 	"github.com/estenssoros/sheetdrop/internal/middle"
 	"github.com/estenssoros/sheetdrop/orm"
-	"github.com/gorilla/sessions"
-	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/errors"
@@ -32,15 +30,19 @@ func run() error {
 		return errors.Wrap(err, "orm.Connect")
 	}
 	e.Use(middle.DBInjector(controllers.New(db)))
-	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
+	// e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
-	routes(e.Group(
+	restRoutes(e.Group(
+		"/rest",
+	))
+	apiRoutes(e.Group(
 		"/api",
 		middle.Auth(),
 	))
+
 	return e.Start(":1323")
 }
