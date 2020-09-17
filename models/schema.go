@@ -27,14 +27,14 @@ type Schema struct {
 	Name        *string `gorm:"column:name"`
 	StartRow    int
 	StartColumn int
-	Headers     []*Header
-	SourceType  string `gorm:"type:varchar(10)"`
+	Headers     []*Header `gorm:"-"`
+	SourceType  string    `gorm:"type:varchar(10)"`
 	SourceURI   string
-	AuthToken   uuid.UUID `gorm:"type:varchar(36);unique"`
+	UUID        uuid.UUID `gorm:"type:varchar(36);unique"`
 }
 
 func (s *Schema) BeforeCreate(tx *gorm.DB) error {
-	s.AuthToken = uuid.Must(uuid.NewV4())
+	s.UUID = uuid.Must(uuid.NewV4())
 	return nil
 }
 

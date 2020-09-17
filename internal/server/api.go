@@ -5,8 +5,11 @@ import (
 	"strconv"
 
 	"github.com/estenssoros/sheetdrop/constants"
+	"github.com/estenssoros/sheetdrop/controllers"
 	"github.com/estenssoros/sheetdrop/models"
 	"github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 func getAPIHandler(c echo.Context) error {
@@ -26,63 +29,119 @@ func getAPIHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, api)
 }
 
+type createAPIRequest struct {
+	Name           *string
+	OrganizationID *uint
+}
+
+func (req *createAPIRequest) ValidateAPI(c echo.Context, ctl controllers.Interface) (*models.API, error) {
+	if req.Name == nil {
+		return nil, errors.New("missing api name")
+	}
+	if req.OrganizationID == nil {
+		return nil, errors.New("missing org id")
+	}
+	user, err := ctl.GetUserByName(c.Get(constants.ContextUserName).(string))
+	if err != nil {
+		return nil, errors.Wrap(err, "GetUserByName")
+	}
+	hasOrg, err := ctl.UserCanEditOrg(user, &models.Organization{
+		Model: gorm.Model{ID: *req.OrganizationID},
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "UserHasOrg")
+	}
+	if !hasOrg {
+		return nil, errors.New("user is not org member")
+	}
+	return &models.API{
+		OrganizationID: *req.OrganizationID,
+		OwnerID:        user.ID,
+		Name:           req.Name,
+	}, nil
+}
+
 func createAPIHandler(c echo.Context) error {
-	api := &models.API{}
-	if err := c.Bind(api); err != nil {
+	req := &createAPIRequest{}
+	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	if api.Name == nil {
-		return c.JSON(http.StatusBadRequest, "missing api name")
+	ctl := extractController(c)
+	api, err := req.ValidateAPI(c, ctl)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	if err := ctl.DB().Create(api).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, api)
+}
+
+type deleteAPIRequest struct {
+	ID *uint
+}
+
+func deleteAPIHandler(c echo.Context) error {
+	req := &deleteAPIRequest{}
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	ctl := extractController(c)
 	user, err := ctl.GetUserByName(c.Get(constants.ContextUserName).(string))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	newAPI := &models.API{
-		UserID: user.ID,
-		Name:   api.Name,
-	}
-	if err := ctl.DB().Create(&newAPI).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	return c.JSON(http.StatusOK, newAPI)
-}
-
-func deleteAPIHandler(c echo.Context) error {
-	api := &models.API{}
-	if err := c.Bind(api); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
-	}
-	ctl := extractController(c)
-	user, err := ctl.GetUserByID(api.UserID)
+	api, err := ctl.GetAPIByID(*req.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	userName := c.Get(constants.ContextUserName).(string)
-	if user.UserName != userName {
-		return c.JSON(http.StatusForbidden, "username not valid")
+	if api.OwnerID != user.ID {
+		return c.JSON(http.StatusForbidden, "user cannot edit org")
 	}
+	// TODO deal with orphaned schemas, headers, etc
 	if err := ctl.DB().Delete(&api).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)
 }
 
+type updateAPIRequest struct {
+	ID   *uint
+	Name *string
+}
+
+func (req updateAPIRequest) Validate() error {
+	if req.ID == nil {
+		return errors.New("missing id")
+	}
+	if req.Name == nil {
+		return errors.New("missing name")
+	}
+	return nil
+}
+
 func updateAPIHandler(c echo.Context) error {
-	api := &models.API{}
-	if err := c.Bind(api); err != nil {
+	req := &updateAPIRequest{}
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := req.Validate(); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	ctl := extractController(c)
-	user, err := ctl.GetUserByID(api.UserID)
+	api, err := ctl.GetAPIByID(*req.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	user, err := ctl.GetUserByID(api.OwnerID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	userName := c.Get(constants.ContextUserName).(string)
 	if user.UserName != userName {
-		return c.JSON(http.StatusForbidden, "username not valid")
+		return c.JSON(http.StatusForbidden, "user cannot edit api")
 	}
+	api.Name = req.Name
 	if err := ctl.DB().Save(api).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

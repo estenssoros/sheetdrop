@@ -9,7 +9,7 @@ import (
 // User a user of the application
 type User struct {
 	gorm.Model
-	UserName string `gorm:"type:varchar(50)"`
+	UserName string `gorm:"type:varchar(50);unique"`
 	APIs     []*API
 }
 
