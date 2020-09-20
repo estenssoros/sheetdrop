@@ -17,7 +17,7 @@ func (c *Controller) GetUserAPIs(user *models.User) ([]*models.API, error) {
 }
 
 func (c *Controller) CreateAPIForUser(user *models.User) (*models.API, error) {
-	api := &models.API{UserID: user.ID}
+	api := &models.API{OwnerID: user.ID}
 	return api, c.db.Create(api).Error
 }
 
