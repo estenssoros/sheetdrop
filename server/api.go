@@ -9,20 +9,19 @@ import (
 	"github.com/estenssoros/sheetdrop/models"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 func getAPIHandler(c echo.Context) error {
 	apiID, err := strconv.Atoi(c.Param("id"))
 	ctl := extractController(c)
-	user, err := ctl.GetUserFromAPIID(uint(apiID))
+	user, err := ctl.UserFromAPIID(apiID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	if user.UserName != c.Get(constants.ContextUserName).(string) {
 		return c.JSON(http.StatusForbidden, "user names do not match")
 	}
-	api, err := ctl.GetAPIByID(uint(apiID))
+	api, err := ctl.APIByID(apiID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
@@ -31,7 +30,7 @@ func getAPIHandler(c echo.Context) error {
 
 type createAPIRequest struct {
 	Name           *string
-	OrganizationID *uint
+	OrganizationID *int
 }
 
 func (req *createAPIRequest) ValidateAPI(c echo.Context, ctl controllers.Interface) (*models.API, error) {
@@ -46,7 +45,7 @@ func (req *createAPIRequest) ValidateAPI(c echo.Context, ctl controllers.Interfa
 		return nil, errors.Wrap(err, "GetUserByName")
 	}
 	hasOrg, err := ctl.UserCanEditOrg(user, &models.Organization{
-		Model: gorm.Model{ID: *req.OrganizationID},
+		ID: *req.OrganizationID,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "UserHasOrg")
@@ -78,7 +77,7 @@ func createAPIHandler(c echo.Context) error {
 }
 
 type deleteAPIRequest struct {
-	ID *uint
+	ID *int
 }
 
 func deleteAPIHandler(c echo.Context) error {
@@ -91,7 +90,7 @@ func deleteAPIHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	api, err := ctl.GetAPIByID(*req.ID)
+	api, err := ctl.APIByID(*req.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -106,7 +105,7 @@ func deleteAPIHandler(c echo.Context) error {
 }
 
 type updateAPIRequest struct {
-	ID   *uint
+	ID   *int
 	Name *string
 }
 
@@ -129,7 +128,7 @@ func updateAPIHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	ctl := extractController(c)
-	api, err := ctl.GetAPIByID(*req.ID)
+	api, err := ctl.APIByID(*req.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -155,7 +154,7 @@ func getAPIsHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	apis, err := ctl.GetUserAPIs(user)
+	apis, err := ctl.UserAPIs(user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

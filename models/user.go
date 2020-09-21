@@ -2,15 +2,16 @@ package models
 
 import (
 	"encoding/json"
-
-	"gorm.io/gorm"
+	"time"
 )
 
 // User a user of the application
 type User struct {
-	gorm.Model
-	UserName string `gorm:"type:varchar(50);unique"`
-	APIs     []*API
+	ID        int `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time `gorm:"index"`
+	UserName  string     `gorm:"type:varchar(50);unique"`
 }
 
 // TableName implements tablenameable

@@ -65,7 +65,7 @@ func csvHeaders(row []string) ([]*models.Header, error) {
 		}
 		headers = append(headers, &models.Header{
 			Name:  headerName,
-			Index: uint(i),
+			Index: i,
 		})
 	}
 	return headers, nil

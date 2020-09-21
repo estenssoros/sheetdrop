@@ -3,6 +3,7 @@ module github.com/estenssoros/sheetdrop
 go 1.14
 
 require (
+	github.com/99designs/gqlgen v0.12.2
 	github.com/GeertJohan/go.rice v1.0.0
 	github.com/aws/aws-sdk-go v1.34.10
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -22,6 +23,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.5.1
 	github.com/tealeg/xlsx v1.0.5
+	github.com/vektah/gqlparser/v2 v2.0.1
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gorm.io/driver/mysql v1.0.1

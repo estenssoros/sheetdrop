@@ -1,8 +1,6 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
+import "time"
 
 const (
 	LevelFree = iota
@@ -11,7 +9,10 @@ const (
 )
 
 type Organization struct {
-	gorm.Model
+	ID           int `gorm:"primarykey"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    *time.Time `gorm:"index"`
 	Name         *string
 	AccountLevel int
 }
@@ -22,9 +23,12 @@ func (o Organization) TableName() string {
 }
 
 type OrganizationUser struct {
-	gorm.Model
-	OrganizationID uint
-	UserID         uint
+	ID             int `gorm:"primarykey"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	DeletedAt      *time.Time `gorm:"index"`
+	OrganizationID int
+	UserID         int
 }
 
 // TableName implements tablenameable

@@ -2,18 +2,20 @@ package models
 
 import (
 	"reflect"
-
-	"gorm.io/gorm"
+	"time"
 )
 
 // Header field information from a data source
 type Header struct {
-	gorm.Model
-	SchemaID uint
-	Name     string `gorm:"type:varchar(50)"`
-	Index    uint   `gorm:"column:idx"`
-	DataType string `gorm:"type:varchar(10)"`
-	IsID     bool
+	ID        int `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time `gorm:"index"`
+	SchemaID  int
+	Name      string `gorm:"type:varchar(50)"`
+	Index     int    `gorm:"column:idx"`
+	DataType  string `gorm:"type:varchar(10)"`
+	IsID      bool
 }
 
 // TableName implements tablenameable

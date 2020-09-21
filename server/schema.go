@@ -10,7 +10,6 @@ import (
 	"github.com/estenssoros/sheetdrop/responses"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 func getSchemaHandler(c echo.Context) error {
@@ -23,7 +22,7 @@ func getSchemaHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "no id sent")
 	}
 	ctl := extractController(c)
-	user, err := ctl.GetUserFromAPIID(uint(apiID))
+	user, err := ctl.UserFromAPIID(apiID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -31,7 +30,7 @@ func getSchemaHandler(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, "user names do not match")
 	}
 	schemas, err := ctl.GetSchemasForAPI(&models.API{
-		Model: gorm.Model{ID: uint(apiID)},
+		ID: apiID,
 	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
@@ -43,7 +42,7 @@ func getSchemaHandler(c echo.Context) error {
 		return c.JSON(http.StatusOK, schemas)
 	}
 	schema, err := ctl.CreateSchemaForAPI(&models.API{
-		Model: gorm.Model{ID: uint(apiID)},
+		ID: apiID,
 	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())

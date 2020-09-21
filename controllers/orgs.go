@@ -7,6 +7,8 @@ import (
 )
 
 type Org interface {
+	OrganizationByID(int) (*models.Organization, error)
+	OrganizationUsers(*models.Organization) ([]*models.User, error)
 	GetUserOrgsResponse(*models.User) ([]*responses.Organization, error)
 	CreateOrg(*CreateOrgInput) error
 	UserCanEditOrg(*models.User, *models.Organization) (bool, error)
@@ -56,4 +58,16 @@ func (c *Controller) UserCanEditOrg(user *models.User, org *models.Organization)
 
 func (c *Controller) UpdateOrg(org *models.Organization) error {
 	return c.db.Save(org).Error
+}
+
+func (c *Controller) OrganizationByID(id int) (*models.Organization, error) {
+	org := &models.Organization{}
+	return org, c.db.Where("id=?", id).First(org).Error
+}
+
+func (c *Controller) OrganizationUsers(obj *models.Organization) ([]*models.User, error) {
+	users := []*models.User{}
+	return users, c.db.
+		Joins("JOIN organization_user ON organization_user.user_id = user.id").
+		Where("organization_user.organization_id=?", obj.ID).Find(&users).Error
 }

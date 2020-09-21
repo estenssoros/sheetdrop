@@ -3,7 +3,7 @@ package responses
 import "encoding/json"
 
 type Organization struct {
-	ID           uint
+	ID           int
 	Name         *string
 	AccountLevel string
 	Members      int

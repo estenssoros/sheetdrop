@@ -2,8 +2,8 @@ package server
 
 import (
 	"github.com/estenssoros/sheetdrop/controllers"
-	"github.com/estenssoros/sheetdrop/internal/server/middle"
 	"github.com/estenssoros/sheetdrop/orm"
+	"github.com/estenssoros/sheetdrop/server/middle"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/errors"

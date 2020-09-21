@@ -10,9 +10,9 @@ type Schema interface {
 	GetSchemasForAPI(*models.API) ([]*models.Schema, error)
 	CreateSchemaForAPI(*models.API) (*models.Schema, error)
 	UpdateSchema(*UpdateSchemaInput) (*models.Schema, error)
-	GetUserFromSchemaID(schemaID uint) (*models.User, error)
+	GetUserFromSchemaID(schemaID int) (*models.User, error)
 	DeleteSchema(*models.Schema) error
-	SchemaByID(uint) (*models.Schema, error)
+	SchemaByID(int) (*models.Schema, error)
 	GetSchemaRelations([]*models.Schema) error
 }
 
@@ -55,7 +55,7 @@ func (c *Controller) UpdateSchema(input *UpdateSchemaInput) (*models.Schema, err
 	return schema, c.db.Save(schema).Error
 }
 
-func (c *Controller) GetUserFromSchemaID(schemaID uint) (*models.User, error) {
+func (c *Controller) GetUserFromSchemaID(schemaID int) (*models.User, error) {
 	user := &models.User{}
 	return user, c.db.Model(user).
 		Joins("JOIN api ON api.user_id = user.id").
@@ -68,17 +68,17 @@ func (c *Controller) DeleteSchema(schema *models.Schema) error {
 	return c.db.Delete(schema).Error
 }
 
-func (c *Controller) SchemaByID(schemaID uint) (*models.Schema, error) {
+func (c *Controller) SchemaByID(schemaID int) (*models.Schema, error) {
 	schema := &models.Schema{}
 	return schema, c.db.Where("id=?", schemaID).First(schema).Error
 }
 
 func (c *Controller) GetSchemaRelations(schemas []*models.Schema) error {
-	ids := make([]uint, len(schemas))
+	ids := make([]int, len(schemas))
 	for i := 0; i < len(schemas); i++ {
 		ids[i] = schemas[i].ID
 	}
-	headersMap := map[uint][]*models.Header{}
+	headersMap := map[int][]*models.Header{}
 	{
 		headers := []*models.Header{}
 		if err := c.db.Where("schema_id IN (?)", ids).Order("idx").Find(&headers).Error; err != nil {

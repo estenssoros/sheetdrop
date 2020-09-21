@@ -1,0 +1,45 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+
+type User {
+  id: ID!
+  userName: String!
+  organizations: [Organization!]
+}
+
+type Organization {
+  id: ID!
+  name: String!
+  user: [User!]
+}
+
+type API {
+  id: ID!
+  organization: Organization!
+  name: String!
+  authToken: String!
+  schemas: [Schema!]
+}
+
+type Schema {
+  id: ID!
+  name: String!
+  startRow: Int!
+  startColumn: Int!
+  sourceType: String!
+  sourceURI: String!
+  uuid: String!
+  api: API!
+  headers: [Header!]
+}
+
+type Header {
+  id: ID!
+  name: String!
+  index: Int!
+  dataType: String!
+  isID: Boolean!
+  schema: Schema!
+}

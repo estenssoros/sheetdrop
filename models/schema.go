@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
@@ -22,15 +23,18 @@ const (
 
 // Schema source information for data
 type Schema struct {
-	gorm.Model
-	APIID       uint    `gorm:"column:api_id" json:"api_id"`
-	Name        *string `gorm:"column:name"`
+	ID          int `gorm:"primarykey"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time `gorm:"index"`
+	APIID       int        `gorm:"column:api_id" json:"api_id"`
+	Name        *string    `gorm:"column:name"`
 	StartRow    int
 	StartColumn int
-	Headers     []*Header `gorm:"-"`
-	SourceType  string    `gorm:"type:varchar(10)"`
+	SourceType  string `gorm:"type:varchar(10)"`
 	SourceURI   string
 	UUID        uuid.UUID `gorm:"type:varchar(36);unique"`
+	Headers     []*Header
 }
 
 func (s *Schema) BeforeCreate(tx *gorm.DB) error {

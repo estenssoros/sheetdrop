@@ -118,7 +118,8 @@ func sheetHeaders(sheet *xlsx.Sheet, startRow, startColumn int) (headers []*mode
 		}
 		headers = append(headers, &models.Header{
 			Name:  headerName,
-			Index: uint(startColumn + i)})
+			Index: startColumn + i,
+		})
 	}
 	return headers, nil
 }

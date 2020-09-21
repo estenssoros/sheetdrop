@@ -20,8 +20,8 @@ type File interface {
 
 type ProcessFileInput struct {
 	User      string
-	SchemaID  *uint   `form:"id"`
-	APIID     *uint   `json:"api_id" form:"api_id"`
+	SchemaID  *int    `form:"id"`
+	APIID     *int    `json:"api_id" form:"api_id"`
 	Name      *string `form:"name"`
 	FileName  string
 	Extension *string
