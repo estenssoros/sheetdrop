@@ -89,6 +89,9 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 		return nil, errors.Wrap(err, *input.Extension)
 	}
 	headerSet, err := c.GetSchemaHeadersSet(schema)
+	if err != nil {
+		return nil, errors.Wrap(err, "GetSchemaHeadersSet")
+	}
 	{
 		headers := headerSet.ToCreate(schema.Headers)
 		if len(headers) > 0 {

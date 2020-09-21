@@ -33,7 +33,7 @@ func run() error {
 	restRoutes(e.Group(
 		"/rest",
 	))
-	apiRoutes(e.Group(
+	routes(e.Group(
 		"/api",
 		middle.Auth(),
 	))

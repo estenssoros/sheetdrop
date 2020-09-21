@@ -3,14 +3,13 @@ package server
 import (
 	"net/http"
 
-	"github.com/estenssoros/sheetdrop/constants"
 	"github.com/estenssoros/sheetdrop/controllers"
 	"github.com/estenssoros/sheetdrop/models"
 	"github.com/labstack/echo/v4"
 )
 
 func getOrgsHandler(c echo.Context) error {
-	userName := c.Get(constants.ContextUserName).(string)
+	userName := extractUserName(c)
 	ctl := extractController(c)
 	user, err := ctl.GetOrCreateUserByName(userName)
 	if err != nil {
@@ -32,7 +31,7 @@ func createOrgHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "missing api name")
 	}
 	ctl := extractController(c)
-	user, err := ctl.GetUserByName(c.Get(constants.ContextUserName).(string))
+	user, err := ctl.GetUserByName(extractUserName(c))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

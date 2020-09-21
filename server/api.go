@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/estenssoros/sheetdrop/constants"
 	"github.com/estenssoros/sheetdrop/controllers"
 	"github.com/estenssoros/sheetdrop/models"
 	"github.com/labstack/echo/v4"
@@ -13,12 +12,15 @@ import (
 
 func getAPIHandler(c echo.Context) error {
 	apiID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
 	ctl := extractController(c)
 	user, err := ctl.UserFromAPIID(apiID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	if user.UserName != c.Get(constants.ContextUserName).(string) {
+	if user.UserName != extractUserName(c) {
 		return c.JSON(http.StatusForbidden, "user names do not match")
 	}
 	api, err := ctl.APIByID(apiID)
@@ -40,7 +42,7 @@ func (req *createAPIRequest) ValidateAPI(c echo.Context, ctl controllers.Interfa
 	if req.OrganizationID == nil {
 		return nil, errors.New("missing org id")
 	}
-	user, err := ctl.GetUserByName(c.Get(constants.ContextUserName).(string))
+	user, err := ctl.GetUserByName(extractUserName(c))
 	if err != nil {
 		return nil, errors.Wrap(err, "GetUserByName")
 	}
@@ -86,7 +88,7 @@ func deleteAPIHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	ctl := extractController(c)
-	user, err := ctl.GetUserByName(c.Get(constants.ContextUserName).(string))
+	user, err := ctl.GetUserByName(extractUserName(c))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -136,7 +138,7 @@ func updateAPIHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	userName := c.Get(constants.ContextUserName).(string)
+	userName := extractUserName(c)
 	if user.UserName != userName {
 		return c.JSON(http.StatusForbidden, "user cannot edit api")
 	}
@@ -148,7 +150,7 @@ func updateAPIHandler(c echo.Context) error {
 }
 
 func getAPIsHandler(c echo.Context) error {
-	userName := c.Get(constants.ContextUserName).(string)
+	userName := extractUserName(c)
 	ctl := extractController(c)
 	user, err := ctl.GetOrCreateUserByName(userName)
 	if err != nil {

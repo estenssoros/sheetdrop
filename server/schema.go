@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/estenssoros/sheetdrop/constants"
 	"github.com/estenssoros/sheetdrop/controllers"
 	"github.com/estenssoros/sheetdrop/models"
 	"github.com/estenssoros/sheetdrop/responses"
@@ -26,7 +25,7 @@ func getSchemaHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	if user.UserName != c.Get(constants.ContextUserName).(string) {
+	if user.UserName != extractUserName(c) {
 		return c.JSON(http.StatusForbidden, "user names do not match")
 	}
 	schemas, err := ctl.GetSchemasForAPI(&models.API{
@@ -80,7 +79,7 @@ func schemaFilePatchHandler(c echo.Context) error {
 	if err := c.Bind(input); err != nil {
 		return responses.Error(c, http.StatusBadRequest, errors.Wrap(err, "c.Bind"))
 	}
-	input.User = c.Get(constants.ContextUserName).(string)
+	input.User = extractUserName(c)
 	return fileUploadHandler(c, input)
 }
 
@@ -89,7 +88,7 @@ func schemaFileUploadHandler(c echo.Context) error {
 	if err := c.Bind(input); err != nil {
 		return responses.Error(c, http.StatusBadRequest, errors.Wrap(err, "c.Bind"))
 	}
-	input.User = c.Get(constants.ContextUserName).(string)
+	input.User = extractUserName(c)
 	input.NewSchema = true
 	return fileUploadHandler(c, input)
 }
