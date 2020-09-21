@@ -6,33 +6,39 @@ import (
 	"gorm.io/gorm"
 )
 
+// Schema everything a schema must do
 type Schema interface {
-	GetSchemasForAPI(*models.API) ([]*models.Schema, error)
-	CreateSchemaForAPI(*models.API) (*models.Schema, error)
 	UpdateSchema(*UpdateSchemaInput) (*models.Schema, error)
-	GetUserFromSchemaID(schemaID int) (*models.User, error)
+	UserFromSchemaID(schemaID int) (*models.User, error)
 	DeleteSchema(*models.Schema) error
 	SchemaByID(int) (*models.Schema, error)
-	GetSchemaRelations([]*models.Schema) error
+	SchemaRelations([]*models.Schema) error
+	SchemaHeaders(*models.Schema) ([]*models.Header, error)
+	// SchemaHeadersMap(*models.Schema) (map[string]*models.Header, error)
 }
 
-func (c *Controller) GetSchemasForAPI(api *models.API) ([]*models.Schema, error) {
-	schemas := []*models.Schema{}
-	return schemas, c.db.Where("api_id=?", api.ID).Find(&schemas).Error
+// SchemaHeaders gets headers for a schema
+func (c *Controller) SchemaHeaders(schema *models.Schema) ([]*models.Header, error) {
+	headers := []*models.Header{}
+	return headers, c.db.Where("schema_id=?", schema.ID).Find(&headers).Error
 }
 
-func (c *Controller) CreateSchemaForAPI(api *models.API) (*models.Schema, error) {
-	schema := &models.Schema{
-		APIID: api.ID,
+// SchemaHeadersSet headers set for a schema
+func (c *Controller) SchemaHeadersSet(schema *models.Schema) (*models.HeaderSet, error) {
+	headers, err := c.SchemaHeaders(schema)
+	if err != nil {
+		return nil, errors.Wrap(err, "GetSchemaHeaders")
 	}
-	return schema, c.db.Create(schema).Error
+	return models.NewHeaderSet(headers), nil
 }
 
+// UpdateSchemaInput input into update schema
 type UpdateSchemaInput struct {
 	ID   *int
 	Name *string
 }
 
+// Validate validates inputs
 func (input *UpdateSchemaInput) Validate(db *gorm.DB) error {
 	if input.ID == nil {
 		return errors.New("missing id")
@@ -43,6 +49,7 @@ func (input *UpdateSchemaInput) Validate(db *gorm.DB) error {
 	return nil
 }
 
+// UpdateSchema updates a schema
 func (c *Controller) UpdateSchema(input *UpdateSchemaInput) (*models.Schema, error) {
 	if err := c.Validate(input); err != nil {
 		return nil, errors.Wrap(err, "validate")
@@ -55,25 +62,29 @@ func (c *Controller) UpdateSchema(input *UpdateSchemaInput) (*models.Schema, err
 	return schema, c.db.Save(schema).Error
 }
 
-func (c *Controller) GetUserFromSchemaID(schemaID int) (*models.User, error) {
+// UserFromSchemaID get a user from a schema
+func (c *Controller) UserFromSchemaID(schemaID int) (*models.User, error) {
 	user := &models.User{}
 	return user, c.db.Model(user).
-		Joins("JOIN api ON api.user_id = user.id").
+		Joins("JOIN api ON api.owner_id = user.id").
 		Joins("JOIN schema ON schema.api_id = api.id").
 		Where("schema.id=?", schemaID).
 		First(user).Error
 }
 
+// DeleteSchema deletes a schema
 func (c *Controller) DeleteSchema(schema *models.Schema) error {
-	return c.db.Delete(schema).Error
+	return c.Delete(schema)
 }
 
+// SchemaByID fetch a schema by id
 func (c *Controller) SchemaByID(schemaID int) (*models.Schema, error) {
 	schema := &models.Schema{}
 	return schema, c.db.Where("id=?", schemaID).First(schema).Error
 }
 
-func (c *Controller) GetSchemaRelations(schemas []*models.Schema) error {
+// SchemaRelations populate schema relations
+func (c *Controller) SchemaRelations(schemas []*models.Schema) error {
 	ids := make([]int, len(schemas))
 	for i := 0; i < len(schemas); i++ {
 		ids[i] = schemas[i].ID

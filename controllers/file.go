@@ -14,10 +14,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// File interface for file operations
 type File interface {
 	ProcessFile(*ProcessFileInput) (schema *models.Schema, err error)
 }
 
+// ProcessFileInput input to processfile
 type ProcessFileInput struct {
 	User      string
 	SchemaID  *int    `form:"id"`
@@ -29,6 +31,7 @@ type ProcessFileInput struct {
 	NewSchema bool
 }
 
+// Validate checks that inputs are correct
 func (input *ProcessFileInput) Validate(db *gorm.DB) error {
 	if input.Extension == nil {
 		input.Extension = helpers.StringPtr(filepath.Ext(input.FileName))
@@ -48,6 +51,7 @@ func (input *ProcessFileInput) Validate(db *gorm.DB) error {
 	return nil
 }
 
+// ProcessFile process a file into a schema
 func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema, err error) {
 	if err := c.Validate(input); err != nil {
 		return nil, errors.Wrap(err, "input.Validate")
@@ -88,7 +92,7 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 	if err := processor(); err != nil {
 		return nil, errors.Wrap(err, *input.Extension)
 	}
-	headerSet, err := c.GetSchemaHeadersSet(schema)
+	headerSet, err := c.SchemaHeadersSet(schema)
 	if err != nil {
 		return nil, errors.Wrap(err, "GetSchemaHeadersSet")
 	}

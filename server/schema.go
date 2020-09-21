@@ -28,14 +28,14 @@ func getSchemaHandler(c echo.Context) error {
 	if user.UserName != extractUserName(c) {
 		return c.JSON(http.StatusForbidden, "user names do not match")
 	}
-	schemas, err := ctl.GetSchemasForAPI(&models.API{
+	schemas, err := ctl.SchemasForAPI(&models.API{
 		ID: apiID,
 	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	if len(schemas) > 0 {
-		if err := ctl.GetSchemaRelations(schemas); err != nil {
+		if err := ctl.SchemaRelations(schemas); err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
 		return c.JSON(http.StatusOK, schemas)

@@ -6,17 +6,18 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Org everything an org must do
 type Org interface {
 	OrganizationByID(int) (*models.Organization, error)
 	OrganizationUsers(*models.Organization) ([]*models.User, error)
-	GetUserOrgsResponse(*models.User) ([]*responses.Organization, error)
+	UserOrgsResponse(*models.User) ([]*responses.Organization, error)
 	CreateOrg(*CreateOrgInput) error
 	UserCanEditOrg(*models.User, *models.Organization) (bool, error)
 	UpdateOrg(*models.Organization) error
 }
 
-// GetUserOrgsResponse get orgs for a user
-func (c *Controller) GetUserOrgsResponse(user *models.User) ([]*responses.Organization, error) {
+// UserOrgsResponse get orgs for a user
+func (c *Controller) UserOrgsResponse(user *models.User) ([]*responses.Organization, error) {
 	orgs := []*responses.Organization{}
 	query := c.db.Model(&models.Organization{}).
 		Select(`organization.id, organization.name, organization.account_level, count(*) members`).
@@ -28,12 +29,14 @@ func (c *Controller) GetUserOrgsResponse(user *models.User) ([]*responses.Organi
 		Error
 }
 
+// CreateOrgInput in put for creating org
 type CreateOrgInput struct {
 	Org  *models.Organization
 	User *models.User
 }
 
-func (c *Controller) CreateOrg(input *CreateOrgInput) error {
+// CreateOrg create an org
+func (c *Controller) c(input *CreateOrgInput) error {
 	if err := c.Validate(input); err != nil {
 		return errors.Wrap(err, "Validate")
 	}
@@ -47,6 +50,7 @@ func (c *Controller) CreateOrg(input *CreateOrgInput) error {
 	return errors.Wrap(c.db.Create(orgUser).Error, "create org user")
 }
 
+// UserCanEditOrg can a user edit an org
 func (c *Controller) UserCanEditOrg(user *models.User, org *models.Organization) (bool, error) {
 	var count int64
 	err := c.db.Model(&models.OrganizationUser{}).
@@ -56,15 +60,18 @@ func (c *Controller) UserCanEditOrg(user *models.User, org *models.Organization)
 	return count > 0, err
 }
 
+// UpdateOrg saves an org
 func (c *Controller) UpdateOrg(org *models.Organization) error {
 	return c.db.Save(org).Error
 }
 
+// OrganizationByID gets organization by id
 func (c *Controller) OrganizationByID(id int) (*models.Organization, error) {
 	org := &models.Organization{}
 	return org, c.db.Where("id=?", id).First(org).Error
 }
 
+// OrganizationUsers get users for an organization
 func (c *Controller) OrganizationUsers(obj *models.Organization) ([]*models.User, error) {
 	users := []*models.User{}
 	return users, c.db.
