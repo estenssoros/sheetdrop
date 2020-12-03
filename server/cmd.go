@@ -24,18 +24,27 @@ func run() error {
 	if err != nil {
 		return errors.Wrap(err, "orm.Connect")
 	}
-	e.Use(middle.DBInjector(controllers.New(db)))
+	ctl := controllers.New(db)
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
+
+	e.Use(middle.CTLInjector(ctl))
+
+	{
+		graph := e.Group("/graph")
+		graph.POST("", graphHandler(ctl))
+		graph.GET("/play", playgroundHandler())
+	}
+
 	restRoutes(e.Group(
 		"/rest",
 	))
 	routes(e.Group(
 		"/api",
-		middle.Auth(),
+		// middle.Auth(),
 	))
 
 	return e.Start(":1323")
