@@ -30,7 +30,7 @@ func (c *Controller) APIByID(id int) (*models.API, error) {
 func (c *Controller) UserFromAPIID(apiID int) (*models.User, error) {
 	user := &models.User{}
 	return user, c.
-		Joins("JOIN api ON api.owner_id = user.id").
+		Joins("JOIN api ON api.owner_id = users.id").
 		Where("api.id=?", apiID).
 		First(user).Error
 }
