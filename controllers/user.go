@@ -5,6 +5,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+func (c *Controller) ListUsers() ([]*models.User, error) {
+	users := []*models.User{}
+	return users, c.Find(&users).Error
+}
+
 // GetUserByName gets user model by username
 func (c *Controller) GetUserByName(userName string) (*models.User, error) {
 	user := &models.User{}

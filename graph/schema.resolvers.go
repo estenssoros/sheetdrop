@@ -30,6 +30,10 @@ func (r *organizationResolver) User(ctx context.Context, obj *models.Organizatio
 	return r.OrganizationUsers(obj)
 }
 
+func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
+	return r.ListUsers()
+}
+
 func (r *schemaResolver) UUID(ctx context.Context, obj *models.Schema) (string, error) {
 	return obj.UUID.String(), nil
 }
@@ -51,6 +55,9 @@ func (r *Resolver) Header() generated.HeaderResolver { return &headerResolver{r}
 // Organization returns generated.OrganizationResolver implementation.
 func (r *Resolver) Organization() generated.OrganizationResolver { return &organizationResolver{r} }
 
+// Query returns generated.QueryResolver implementation.
+func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
+
 // Schema returns generated.SchemaResolver implementation.
 func (r *Resolver) Schema() generated.SchemaResolver { return &schemaResolver{r} }
 
@@ -60,5 +67,6 @@ func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 type aPIResolver struct{ *Resolver }
 type headerResolver struct{ *Resolver }
 type organizationResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }
 type schemaResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
