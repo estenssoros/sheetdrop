@@ -11,5 +11,5 @@ func init() {
 // Cmd entrypoint
 var Cmd = &cobra.Command{
 	Use:   "db",
-	Short: "",
+	Short: "database operations",
 }
