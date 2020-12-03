@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/estenssoros/sheetdrop/internal/helpers"
 	"github.com/estenssoros/sheetdrop/models"
 	"github.com/estenssoros/sheetdrop/responses"
 	"github.com/pkg/errors"
@@ -65,6 +66,36 @@ func (c *Controller) OrganizationByID(id int) (*models.Organization, error) {
 func (c *Controller) OrganizationUsers(obj *models.Organization) ([]*models.User, error) {
 	users := []*models.User{}
 	return users, c.
-		Joins("JOIN organization_user ON organization_user.user_id = user.id").
+		Joins("JOIN organization_user ON organization_user.user_id = users.id").
 		Where("organization_user.organization_id=?", obj.ID).Find(&users).Error
+}
+
+func (c *Controller) CreateOrgByName(orgName string) (*models.Organization, error) {
+	org := &models.Organization{
+		Name: helpers.StringPtr(orgName),
+	}
+	return org, c.Create(org).Error
+}
+
+func (c *Controller) UserHasOrg(userID int, orgName string) (bool, error) {
+	var count int64
+	query := c.Model(&models.OrganizationUser{}).
+		Joins("JOIN organization ON organization.id = organization_user.organization_id").
+		Where("organization.name=?", orgName)
+	return count > 0, query.Count(&count).Error
+}
+
+func (c *Controller) CreateOrgWithName(orgName string) (*models.Organization, error) {
+	org := &models.Organization{
+		Name: helpers.StringPtr(orgName),
+	}
+	return org, c.Create(org).Error
+}
+
+func (c *Controller) CreateOrgUser(orgID, userID int) (*models.OrganizationUser, error) {
+	orgUser := &models.OrganizationUser{
+		OrganizationID: orgID,
+		UserID:         userID,
+	}
+	return orgUser, c.Create(orgUser).Error
 }
