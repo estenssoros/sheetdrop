@@ -6,14 +6,18 @@ type Query {
   users: [User!]
 }
 
+scalar Time
+
 type User {
   id: ID!
+  createdAt: Time!
   userName: String!
   organizations: [Organization!]
 }
 
 type Organization {
   id: ID!
+  createdAt: Time!
   name: String!
   user: [User!]
 }
@@ -46,3 +50,4 @@ type Header {
   isID: Boolean!
   schema: Schema!
 }
+
