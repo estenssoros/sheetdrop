@@ -5,6 +5,9 @@
 type Query {
   users: [User!]
   organizations: [Organization!]
+  resources: [Resource!]
+  resource(id: ID!): Resource!
+  schemas(resourceID: ID!): [Schema!]
 }
 
 scalar Time

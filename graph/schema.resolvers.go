@@ -26,6 +26,18 @@ func (r *queryResolver) Organizations(ctx context.Context) ([]*models.Organizati
 	return r.ListOrganizations()
 }
 
+func (r *queryResolver) Resources(ctx context.Context) ([]*models.Resource, error) {
+	return r.ListResources()
+}
+
+func (r *queryResolver) Resource(ctx context.Context, id int) (*models.Resource, error) {
+	return r.ResourceByID(id)
+}
+
+func (r *queryResolver) Schemas(ctx context.Context, resourceID int) ([]*models.Schema, error) {
+	return r.ListSchemas()
+}
+
 func (r *resourceResolver) Organization(ctx context.Context, obj *models.Resource) (*models.Organization, error) {
 	return r.OrganizationByID(obj.OrganizationID)
 }

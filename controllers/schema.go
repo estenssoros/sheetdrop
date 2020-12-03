@@ -105,3 +105,8 @@ func (c *Controller) SchemasForResource(resourceID int) ([]*models.Schema, error
 	schemas := []*models.Schema{}
 	return schemas, c.Where("resource_id=?", resourceID).Find(&schemas).Error
 }
+
+func (c *Controller) ListSchemas() ([]*models.Schema, error) {
+	m := []*models.Schema{}
+	return m, c.Find(&m).Error
+}

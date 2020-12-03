@@ -74,6 +74,9 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Organizations func(childComplexity int) int
+		Resource      func(childComplexity int, id int) int
+		Resources     func(childComplexity int) int
+		Schemas       func(childComplexity int, resourceID int) int
 		Users         func(childComplexity int) int
 	}
 
@@ -120,6 +123,9 @@ type OrganizationResolver interface {
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*models.User, error)
 	Organizations(ctx context.Context) ([]*models.Organization, error)
+	Resources(ctx context.Context) ([]*models.Resource, error)
+	Resource(ctx context.Context, id int) (*models.Resource, error)
+	Schemas(ctx context.Context, resourceID int) ([]*models.Schema, error)
 }
 type ResourceResolver interface {
 	Organization(ctx context.Context, obj *models.Resource) (*models.Organization, error)
@@ -274,6 +280,37 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Organizations(childComplexity), true
+
+	case "Query.resource":
+		if e.complexity.Query.Resource == nil {
+			break
+		}
+
+		args, err := ec.field_Query_resource_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Resource(childComplexity, args["id"].(int)), true
+
+	case "Query.resources":
+		if e.complexity.Query.Resources == nil {
+			break
+		}
+
+		return e.complexity.Query.Resources(childComplexity), true
+
+	case "Query.schemas":
+		if e.complexity.Query.Schemas == nil {
+			break
+		}
+
+		args, err := ec.field_Query_schemas_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Schemas(childComplexity, args["resourceID"].(int)), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -487,6 +524,9 @@ type Mutation {
 type Query {
   users: [User!]
   organizations: [Organization!]
+  resources: [Resource!]
+  resource(id: ID!): Resource!
+  schemas(resourceID: ID!): [Schema!]
 }
 
 scalar Time
@@ -633,6 +673,36 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_resource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_schemas_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["resourceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resourceID"] = arg0
 	return args, nil
 }
 
@@ -1251,6 +1321,119 @@ func (ec *executionContext) _Query_organizations(ctx context.Context, field grap
 	res := resTmp.([]*models.Organization)
 	fc.Result = res
 	return ec.marshalOOrganization2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganizationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_resources(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Resources(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Resource)
+	fc.Result = res
+	return ec.marshalOResource2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResourceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_resource(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_resource_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Resource(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Resource)
+	fc.Result = res
+	return ec.marshalNResource2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_schemas(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_schemas_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Schemas(rctx, args["resourceID"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Schema)
+	fc.Result = res
+	return ec.marshalOSchema2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchemaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3232,6 +3415,42 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_organizations(ctx, field)
 				return res
 			})
+		case "resources":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_resources(ctx, field)
+				return res
+			})
+		case "resource":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_resource(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "schemas":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_schemas(ctx, field)
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -4206,6 +4425,46 @@ func (ec *executionContext) marshalOOrganization2ᚕᚖgithubᚗcomᚋestenssoro
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalNOrganization2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganization(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalOResource2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Resource) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNResource2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResource(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
