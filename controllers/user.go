@@ -43,3 +43,7 @@ var errNotImplemented = errors.New("not implemented")
 func (c *Controller) GetUserOrgsResponse(user *models.User) ([]*models.Organization, error) {
 	return nil, errNotImplemented
 }
+
+func (c *Controller) DeleteUserByID(id int) error {
+	return c.Where("id=?", id).Delete(&models.User{}).Error
+}
