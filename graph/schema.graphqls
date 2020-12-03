@@ -4,6 +4,7 @@
 
 type Query {
   users: [User!]
+  organizations: [Organization!]
 }
 
 scalar Time

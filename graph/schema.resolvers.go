@@ -22,6 +22,10 @@ func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
 	return r.ListUsers()
 }
 
+func (r *queryResolver) Organizations(ctx context.Context) ([]*models.Organization, error) {
+	return r.ListOrganizations()
+}
+
 func (r *resourceResolver) Organization(ctx context.Context, obj *models.Resource) (*models.Organization, error) {
 	return r.OrganizationByID(obj.OrganizationID)
 }

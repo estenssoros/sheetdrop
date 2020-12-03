@@ -99,3 +99,8 @@ func (c *Controller) CreateOrgUser(orgID, userID int) (*models.OrganizationUser,
 	}
 	return orgUser, c.Create(orgUser).Error
 }
+
+func (c *Controller) ListOrganizations() ([]*models.Organization, error) {
+	m := []*models.Organization{}
+	return m, c.Find(&m).Error
+}
