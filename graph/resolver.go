@@ -11,12 +11,12 @@ import (
 
 type Resolver struct {
 	*controllers.Controller
-	sema chan struct{}
+	Sema chan struct{}
 }
 
 func NewResolver(db *gorm.DB) *Resolver {
 	return &Resolver{
 		Controller: controllers.New(db),
-		sema:       make(chan struct{}, 10),
+		Sema:       make(chan struct{}, 10),
 	}
 }
