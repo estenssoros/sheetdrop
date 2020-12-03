@@ -13,7 +13,6 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/estenssoros/sheetdrop/graph/model"
 	"github.com/estenssoros/sheetdrop/models"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -60,9 +59,10 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateOrg  func(childComplexity int, input model.CreateOrgInput) int
-		CreateUser func(childComplexity int, userName string) int
-		DeleteUser func(childComplexity int, id int) int
+		AddUserToOrg func(childComplexity int, userID int, orgID int) int
+		CreateOrg    func(childComplexity int, userID int, orgName string) int
+		CreateUser   func(childComplexity int, userName string) int
+		DeleteUser   func(childComplexity int, id int) int
 	}
 
 	Organization struct {
@@ -73,7 +73,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Users func(childComplexity int) int
+		Organizations func(childComplexity int) int
+		Users         func(childComplexity int) int
 	}
 
 	Resource struct {
@@ -110,13 +111,15 @@ type HeaderResolver interface {
 type MutationResolver interface {
 	CreateUser(ctx context.Context, userName string) (*models.User, error)
 	DeleteUser(ctx context.Context, id int) (string, error)
-	CreateOrg(ctx context.Context, input model.CreateOrgInput) (*models.Organization, error)
+	CreateOrg(ctx context.Context, userID int, orgName string) (*models.Organization, error)
+	AddUserToOrg(ctx context.Context, userID int, orgID int) (*models.Organization, error)
 }
 type OrganizationResolver interface {
 	User(ctx context.Context, obj *models.Organization) ([]*models.User, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*models.User, error)
+	Organizations(ctx context.Context) ([]*models.Organization, error)
 }
 type ResourceResolver interface {
 	Organization(ctx context.Context, obj *models.Resource) (*models.Organization, error)
@@ -189,6 +192,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Header.Schema(childComplexity), true
 
+	case "Mutation.addUserToOrg":
+		if e.complexity.Mutation.AddUserToOrg == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addUserToOrg_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddUserToOrg(childComplexity, args["userID"].(int), args["orgID"].(int)), true
+
 	case "Mutation.createOrg":
 		if e.complexity.Mutation.CreateOrg == nil {
 			break
@@ -199,7 +214,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateOrg(childComplexity, args["input"].(model.CreateOrgInput)), true
+		return e.complexity.Mutation.CreateOrg(childComplexity, args["userID"].(int), args["orgName"].(string)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -252,6 +267,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.User(childComplexity), true
+
+	case "Query.organizations":
+		if e.complexity.Query.Organizations == nil {
+			break
+		}
+
+		return e.complexity.Query.Organizations(childComplexity), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -455,20 +477,16 @@ var sources = []*ast.Source{
 type Mutation {
   createUser(userName: String!): User!
   deleteUser(id: ID!): Void!
-  createOrg(input: CreateOrgInput!): Organization!
-}
-
-input CreateOrgInput{
-    UserID: ID!
-    OrgName: String!
-}
-`, BuiltIn: false},
+  createOrg(userID: ID!, orgName: String!): Organization!
+  addUserToOrg(userID: ID!, orgID: ID!): Organization!
+}`, BuiltIn: false},
 	{Name: "graph/schema.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
 
 type Query {
   users: [User!]
+  organizations: [Organization!]
 }
 
 scalar Time
@@ -525,18 +543,51 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_createOrg_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_addUserToOrg_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.CreateOrgInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCreateOrgInput2githubᚗcomᚋestenssorosᚋsheetdropᚋgraphᚋmodelᚐCreateOrgInput(ctx, tmp)
+	var arg0 int
+	if tmp, ok := rawArgs["userID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["userID"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["orgID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orgID"))
+		arg1, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orgID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createOrg_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["userID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["orgName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orgName"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orgName"] = arg1
 	return args, nil
 }
 
@@ -942,7 +993,49 @@ func (ec *executionContext) _Mutation_createOrg(ctx context.Context, field graph
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateOrg(rctx, args["input"].(model.CreateOrgInput))
+		return ec.resolvers.Mutation().CreateOrg(rctx, args["userID"].(int), args["orgName"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_addUserToOrg(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_addUserToOrg_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddUserToOrg(rctx, args["userID"].(int), args["orgID"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1126,6 +1219,38 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	res := resTmp.([]*models.User)
 	fc.Result = res
 	return ec.marshalOUser2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_organizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Organizations(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Organization)
+	fc.Result = res
+	return ec.marshalOOrganization2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganizationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2907,34 +3032,6 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputCreateOrgInput(ctx context.Context, obj interface{}) (model.CreateOrgInput, error) {
-	var it model.CreateOrgInput
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "UserID":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("UserID"))
-			it.UserID, err = ec.unmarshalNID2int(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "OrgName":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("OrgName"))
-			it.OrgName, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -3034,6 +3131,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "addUserToOrg":
+			out.Values[i] = ec._Mutation_addUserToOrg(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3117,6 +3219,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_users(ctx, field)
+				return res
+			})
+		case "organizations":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_organizations(ctx, field)
 				return res
 			})
 		case "__type":
@@ -3593,11 +3706,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNCreateOrgInput2githubᚗcomᚋestenssorosᚋsheetdropᚋgraphᚋmodelᚐCreateOrgInput(ctx context.Context, v interface{}) (model.CreateOrgInput, error) {
-	res, err := ec.unmarshalInputCreateOrgInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNHeader2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐHeader(ctx context.Context, sel ast.SelectionSet, v *models.Header) graphql.Marshaler {

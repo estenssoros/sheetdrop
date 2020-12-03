@@ -7,8 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/estenssoros/sheetdrop/graph/generated"
-	"github.com/estenssoros/sheetdrop/graph/model"
+	generated1 "github.com/estenssoros/sheetdrop/graph/generated"
 	"github.com/estenssoros/sheetdrop/models"
 )
 
@@ -20,25 +19,33 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (string, erro
 	return "", r.DeleteUserByID(id)
 }
 
-func (r *mutationResolver) CreateOrg(ctx context.Context, input model.CreateOrgInput) (*models.Organization, error) {
-	hasOrg, err := r.UserHasOrg(input.UserID, input.OrgName)
+func (r *mutationResolver) CreateOrg(ctx context.Context, userID int, orgName string) (*models.Organization, error) {
+	hasOrg, err := r.UserHasOrg(userID, orgName)
 	if err != nil {
 		return nil, fmt.Errorf("r.UserHasOrg:%v", err)
 	}
 	if hasOrg {
-		return nil, fmt.Errorf("user already has org named: %s", input.OrgName)
+		return nil, fmt.Errorf("user already has org named: %s", orgName)
 	}
-	org, err := r.CreateOrgWithName(input.OrgName)
+	org, err := r.CreateOrgWithName(orgName)
 	if err != nil {
 		return nil, fmt.Errorf("r.CreateOrgByName: %v", err)
 	}
-	if _, err := r.CreateOrgUser(org.ID, input.UserID); err != nil {
+	if _, err := r.CreateOrgUser(org.ID, userID); err != nil {
 		return nil, fmt.Errorf("r.CreateOrgUser: %v", err)
 	}
 	return org, nil
 }
 
-// Mutation returns generated.MutationResolver implementation.
-func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+func (r *mutationResolver) AddUserToOrg(ctx context.Context, userID int, orgID int) (*models.Organization, error) {
+	_, err := r.CreateOrgUser(orgID, userID)
+	if err != nil {
+		return nil, err
+	}
+	return r.OrganizationByID(orgID)
+}
+
+// Mutation returns generated1.MutationResolver implementation.
+func (r *Resolver) Mutation() generated1.MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }

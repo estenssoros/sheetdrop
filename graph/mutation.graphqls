@@ -3,10 +3,6 @@ scalar Void
 type Mutation {
   createUser(userName: String!): User!
   deleteUser(id: ID!): Void!
-  createOrg(input: CreateOrgInput!): Organization!
-}
-
-input CreateOrgInput{
-    UserID: ID!
-    OrgName: String!
+  createOrg(userID: ID!, orgName: String!): Organization!
+  addUserToOrg(userID: ID!, orgID: ID!): Organization!
 }
