@@ -55,9 +55,9 @@ func (c *Controller) UpdateSchema(input *UpdateSchemaInput) (*models.Schema, err
 func (c *Controller) UserFromSchemaID(schemaID int) (*models.User, error) {
 	user := &models.User{}
 	return user, c.Model(user).
-		Joins("JOIN api ON api.owner_id = users.id").
-		Joins("JOIN schema ON schema.api_id = api.id").
-		Where("schema.id=?", schemaID).
+		Joins("JOIN resources ON resources.owner_id = users.id").
+		Joins("JOIN schema ON schema.resource_id = resources.id").
+		Where("schemas.id=?", schemaID).
 		First(user).Error
 }
 
@@ -101,6 +101,6 @@ func (c *Controller) SchemaRelations(schemas []*models.Schema) error {
 	return nil
 }
 
-func (c *Controller) SchemasForAPI(obj *models.API) ([]*models.Schema, error) {
+func (c *Controller) SchemasForResources(obj *models.Resource) ([]*models.Schema, error) {
 	return nil, errNotImplemented
 }

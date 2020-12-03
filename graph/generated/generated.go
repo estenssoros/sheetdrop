@@ -37,11 +37,11 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	API() APIResolver
 	Header() HeaderResolver
 	Mutation() MutationResolver
 	Organization() OrganizationResolver
 	Query() QueryResolver
+	Resource() ResourceResolver
 	Schema() SchemaResolver
 	User() UserResolver
 }
@@ -50,14 +50,6 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	API struct {
-		AuthToken    func(childComplexity int) int
-		ID           func(childComplexity int) int
-		Name         func(childComplexity int) int
-		Organization func(childComplexity int) int
-		Schemas      func(childComplexity int) int
-	}
-
 	Header struct {
 		DataType func(childComplexity int) int
 		ID       func(childComplexity int) int
@@ -84,11 +76,19 @@ type ComplexityRoot struct {
 		Users func(childComplexity int) int
 	}
 
+	Resource struct {
+		AuthToken    func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Name         func(childComplexity int) int
+		Organization func(childComplexity int) int
+		Schemas      func(childComplexity int) int
+	}
+
 	Schema struct {
-		API         func(childComplexity int) int
 		Headers     func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
+		Resource    func(childComplexity int) int
 		SourceType  func(childComplexity int) int
 		SourceURI   func(childComplexity int) int
 		StartColumn func(childComplexity int) int
@@ -104,12 +104,6 @@ type ComplexityRoot struct {
 	}
 }
 
-type APIResolver interface {
-	Organization(ctx context.Context, obj *models.API) (*models.Organization, error)
-
-	AuthToken(ctx context.Context, obj *models.API) (string, error)
-	Schemas(ctx context.Context, obj *models.API) ([]*models.Schema, error)
-}
 type HeaderResolver interface {
 	Schema(ctx context.Context, obj *models.Header) (*models.Schema, error)
 }
@@ -124,9 +118,15 @@ type OrganizationResolver interface {
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*models.User, error)
 }
+type ResourceResolver interface {
+	Organization(ctx context.Context, obj *models.Resource) (*models.Organization, error)
+
+	AuthToken(ctx context.Context, obj *models.Resource) (string, error)
+	Schemas(ctx context.Context, obj *models.Resource) ([]*models.Schema, error)
+}
 type SchemaResolver interface {
 	UUID(ctx context.Context, obj *models.Schema) (string, error)
-	API(ctx context.Context, obj *models.Schema) (*models.API, error)
+	Resource(ctx context.Context, obj *models.Schema) (*models.Resource, error)
 }
 type UserResolver interface {
 	Organizations(ctx context.Context, obj *models.User) ([]*models.Organization, error)
@@ -146,41 +146,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
-
-	case "API.authToken":
-		if e.complexity.API.AuthToken == nil {
-			break
-		}
-
-		return e.complexity.API.AuthToken(childComplexity), true
-
-	case "API.id":
-		if e.complexity.API.ID == nil {
-			break
-		}
-
-		return e.complexity.API.ID(childComplexity), true
-
-	case "API.name":
-		if e.complexity.API.Name == nil {
-			break
-		}
-
-		return e.complexity.API.Name(childComplexity), true
-
-	case "API.organization":
-		if e.complexity.API.Organization == nil {
-			break
-		}
-
-		return e.complexity.API.Organization(childComplexity), true
-
-	case "API.schemas":
-		if e.complexity.API.Schemas == nil {
-			break
-		}
-
-		return e.complexity.API.Schemas(childComplexity), true
 
 	case "Header.dataType":
 		if e.complexity.Header.DataType == nil {
@@ -295,12 +260,40 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Users(childComplexity), true
 
-	case "Schema.api":
-		if e.complexity.Schema.API == nil {
+	case "Resource.authToken":
+		if e.complexity.Resource.AuthToken == nil {
 			break
 		}
 
-		return e.complexity.Schema.API(childComplexity), true
+		return e.complexity.Resource.AuthToken(childComplexity), true
+
+	case "Resource.id":
+		if e.complexity.Resource.ID == nil {
+			break
+		}
+
+		return e.complexity.Resource.ID(childComplexity), true
+
+	case "Resource.name":
+		if e.complexity.Resource.Name == nil {
+			break
+		}
+
+		return e.complexity.Resource.Name(childComplexity), true
+
+	case "Resource.organization":
+		if e.complexity.Resource.Organization == nil {
+			break
+		}
+
+		return e.complexity.Resource.Organization(childComplexity), true
+
+	case "Resource.schemas":
+		if e.complexity.Resource.Schemas == nil {
+			break
+		}
+
+		return e.complexity.Resource.Schemas(childComplexity), true
 
 	case "Schema.headers":
 		if e.complexity.Schema.Headers == nil {
@@ -322,6 +315,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Schema.Name(childComplexity), true
+
+	case "Schema.resource":
+		if e.complexity.Schema.Resource == nil {
+			break
+		}
+
+		return e.complexity.Schema.Resource(childComplexity), true
 
 	case "Schema.sourceType":
 		if e.complexity.Schema.SourceType == nil {
@@ -487,11 +487,13 @@ type Organization {
   user: [User!]
 }
 
-type API {
+scalar UUID
+
+type Resource {
   id: ID!
   organization: Organization!
   name: String!
-  authToken: String!
+  authToken: UUID!
   schemas: [Schema!]
 }
 
@@ -503,7 +505,7 @@ type Schema {
   sourceType: String!
   sourceURI: String!
   uuid: String!
-  api: API!
+  resource: Resource!
   headers: [Header!]
 }
 
@@ -515,7 +517,6 @@ type Header {
   isID: Boolean!
   schema: Schema!
 }
-
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -621,178 +622,6 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
-
-func (ec *executionContext) _API_id(ctx context.Context, field graphql.CollectedField, obj *models.API) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "API",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNID2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _API_organization(ctx context.Context, field graphql.CollectedField, obj *models.API) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "API",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.API().Organization(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.Organization)
-	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganization(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _API_name(ctx context.Context, field graphql.CollectedField, obj *models.API) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "API",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _API_authToken(ctx context.Context, field graphql.CollectedField, obj *models.API) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "API",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.API().AuthToken(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _API_schemas(ctx context.Context, field graphql.CollectedField, obj *models.API) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "API",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.API().Schemas(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Schema)
-	fc.Result = res
-	return ec.marshalOSchema2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchemaᚄ(ctx, field.Selections, res)
-}
 
 func (ec *executionContext) _Header_id(ctx context.Context, field graphql.CollectedField, obj *models.Header) (ret graphql.Marshaler) {
 	defer func() {
@@ -1370,6 +1199,178 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Resource_id(ctx context.Context, field graphql.CollectedField, obj *models.Resource) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Resource",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Resource_organization(ctx context.Context, field graphql.CollectedField, obj *models.Resource) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Resource",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Resource().Organization(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Resource_name(ctx context.Context, field graphql.CollectedField, obj *models.Resource) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Resource",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Resource_authToken(ctx context.Context, field graphql.CollectedField, obj *models.Resource) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Resource",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Resource().AuthToken(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNUUID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Resource_schemas(ctx context.Context, field graphql.CollectedField, obj *models.Resource) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Resource",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Resource().Schemas(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Schema)
+	fc.Result = res
+	return ec.marshalOSchema2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchemaᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Schema_id(ctx context.Context, field graphql.CollectedField, obj *models.Schema) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1615,7 +1616,7 @@ func (ec *executionContext) _Schema_uuid(ctx context.Context, field graphql.Coll
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Schema_api(ctx context.Context, field graphql.CollectedField, obj *models.Schema) (ret graphql.Marshaler) {
+func (ec *executionContext) _Schema_resource(ctx context.Context, field graphql.CollectedField, obj *models.Schema) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1633,7 +1634,7 @@ func (ec *executionContext) _Schema_api(ctx context.Context, field graphql.Colle
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Schema().API(rctx, obj)
+		return ec.resolvers.Schema().Resource(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1645,9 +1646,9 @@ func (ec *executionContext) _Schema_api(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*models.API)
+	res := resTmp.(*models.Resource)
 	fc.Result = res
-	return ec.marshalNAPI2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐAPI(ctx, field.Selections, res)
+	return ec.marshalNResource2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Schema_headers(ctx context.Context, field graphql.CollectedField, obj *models.Schema) (ret graphql.Marshaler) {
@@ -2942,77 +2943,6 @@ func (ec *executionContext) unmarshalInputCreateOrgInput(ctx context.Context, ob
 
 // region    **************************** object.gotpl ****************************
 
-var aPIImplementors = []string{"API"}
-
-func (ec *executionContext) _API(ctx context.Context, sel ast.SelectionSet, obj *models.API) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, aPIImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("API")
-		case "id":
-			out.Values[i] = ec._API_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "organization":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._API_organization(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "name":
-			out.Values[i] = ec._API_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "authToken":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._API_authToken(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "schemas":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._API_schemas(ctx, field, obj)
-				return res
-			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var headerImplementors = []string{"Header"}
 
 func (ec *executionContext) _Header(ctx context.Context, sel ast.SelectionSet, obj *models.Header) graphql.Marshaler {
@@ -3204,6 +3134,77 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
+var resourceImplementors = []string{"Resource"}
+
+func (ec *executionContext) _Resource(ctx context.Context, sel ast.SelectionSet, obj *models.Resource) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, resourceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Resource")
+		case "id":
+			out.Values[i] = ec._Resource_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "organization":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Resource_organization(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "name":
+			out.Values[i] = ec._Resource_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "authToken":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Resource_authToken(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "schemas":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Resource_schemas(ctx, field, obj)
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var schemaImplementors = []string{"Schema"}
 
 func (ec *executionContext) _Schema(ctx context.Context, sel ast.SelectionSet, obj *models.Schema) graphql.Marshaler {
@@ -3259,7 +3260,7 @@ func (ec *executionContext) _Schema(ctx context.Context, sel ast.SelectionSet, o
 				}
 				return res
 			})
-		case "api":
+		case "resource":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -3267,7 +3268,7 @@ func (ec *executionContext) _Schema(ctx context.Context, sel ast.SelectionSet, o
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Schema_api(ctx, field, obj)
+				res = ec._Schema_resource(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -3579,20 +3580,6 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAPI2githubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐAPI(ctx context.Context, sel ast.SelectionSet, v models.API) graphql.Marshaler {
-	return ec._API(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNAPI2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐAPI(ctx context.Context, sel ast.SelectionSet, v *models.API) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._API(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3667,6 +3654,20 @@ func (ec *executionContext) marshalNOrganization2ᚖgithubᚗcomᚋestenssoros�
 	return ec._Organization(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNResource2githubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResource(ctx context.Context, sel ast.SelectionSet, v models.Resource) graphql.Marshaler {
+	return ec._Resource(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNResource2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResource(ctx context.Context, sel ast.SelectionSet, v *models.Resource) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Resource(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNSchema2githubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx context.Context, sel ast.SelectionSet, v models.Schema) graphql.Marshaler {
 	return ec._Schema(ctx, sel, &v)
 }
@@ -3724,6 +3725,21 @@ func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v in
 
 func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
 	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNUUID2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUUID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")

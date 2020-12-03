@@ -27,8 +27,8 @@ type Schema struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time `gorm:"index"`
-	APIID       int        `gorm:"column:api_id" json:"api_id"`
-	Name        *string    `gorm:"column:name"`
+	ResourceID  int
+	Name        *string `gorm:"column:name"`
 	StartRow    int
 	StartColumn int
 	SourceType  string `gorm:"type:varchar(10)"`
@@ -45,9 +45,4 @@ func (s *Schema) BeforeCreate(tx *gorm.DB) error {
 func (s Schema) String() string {
 	ju, _ := json.MarshalIndent(s, "", " ")
 	return string(ju)
-}
-
-// TableName implements tablenameable
-func (s Schema) TableName() string {
-	return `api_schema`
 }

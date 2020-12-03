@@ -22,11 +22,13 @@ type Organization {
   user: [User!]
 }
 
-type API {
+scalar UUID
+
+type Resource {
   id: ID!
   organization: Organization!
   name: String!
-  authToken: String!
+  authToken: UUID!
   schemas: [Schema!]
 }
 
@@ -38,7 +40,7 @@ type Schema {
   sourceType: String!
   sourceURI: String!
   uuid: String!
-  api: API!
+  resource: Resource!
   headers: [Header!]
 }
 
@@ -50,4 +52,3 @@ type Header {
   isID: Boolean!
   schema: Schema!
 }
-

@@ -81,7 +81,7 @@ func (c *Controller) UserHasOrg(userID int, orgName string) (bool, error) {
 	var count int64
 	query := c.Model(&models.OrganizationUser{}).
 		Joins("JOIN organization ON organization.id = organization_user.organization_id").
-		Where("organization.name=?", orgName)
+		Where("organization.name = ?", orgName)
 	return count > 0, query.Count(&count).Error
 }
 

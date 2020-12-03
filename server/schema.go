@@ -20,14 +20,14 @@ func getSchemaHandler(c echo.Context) error {
 	if apiID == 0 {
 		return c.JSON(http.StatusBadRequest, "no id sent")
 	}
-	user, err := ctl(c).UserFromAPIID(apiID)
+	user, err := ctl(c).UserFromResourceID(apiID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	if user.UserName != usr(c) {
 		return c.JSON(http.StatusForbidden, "user names do not match")
 	}
-	schemas, err := ctl(c).SchemasForAPI(&models.API{
+	schemas, err := ctl(c).SchemasForResources(&models.Resource{
 		ID: apiID,
 	})
 	if err != nil {
@@ -39,7 +39,7 @@ func getSchemaHandler(c echo.Context) error {
 		}
 		return c.JSON(http.StatusOK, schemas)
 	}
-	schema, err := ctl(c).CreateSchemaForAPI(&models.API{
+	schema, err := ctl(c).CreateSchemaForResource(&models.Resource{
 		ID: apiID,
 	})
 	if err != nil {

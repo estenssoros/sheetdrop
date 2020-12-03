@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// API api endpoint for a user
-type API struct {
+// Resource api endpoint for a user
+type Resource struct {
 	ID             int `gorm:"primarykey"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
@@ -20,17 +20,12 @@ type API struct {
 	AuthToken      uuid.UUID `gorm:"type:varchar(36);unique"`
 }
 
-// TableName implements tablenameable
-func (a API) TableName() string {
-	return `api`
-}
-
-func (a API) String() string {
-	ju, _ := json.MarshalIndent(a, "", " ")
+func (r Resource) String() string {
+	ju, _ := json.MarshalIndent(r, "", " ")
 	return string(ju)
 }
 
-func (a *API) BeforeCreate(tx *gorm.DB) error {
-	a.AuthToken = uuid.Must(uuid.NewV4())
+func (r *Resource) BeforeCreate(tx *gorm.DB) error {
+	r.AuthToken = uuid.Must(uuid.NewV4())
 	return nil
 }

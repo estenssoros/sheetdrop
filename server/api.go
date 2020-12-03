@@ -9,31 +9,31 @@ import (
 	"github.com/pkg/errors"
 )
 
-func getAPIHandler(c echo.Context) error {
-	apiID, err := strconv.Atoi(c.Param("id"))
+func getResourceHandler(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	user, err := ctl(c).UserFromAPIID(apiID)
+	user, err := ctl(c).UserFromResourceID(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	if user.UserName != usr(c) {
 		return c.JSON(http.StatusForbidden, "user names do not match")
 	}
-	api, err := ctl(c).APIByID(apiID)
+	resource, err := ctl(c).ResourceByID(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, api)
+	return c.JSON(http.StatusOK, resource)
 }
 
-type createAPIRequest struct {
+type createResourceRequest struct {
 	Name           *string
 	OrganizationID *int
 }
 
-func (req *createAPIRequest) ValidateAPI(c echo.Context) (*models.API, error) {
+func (req *createResourceRequest) Validate(c echo.Context) (*models.Resource, error) {
 	if req.Name == nil {
 		return nil, errors.New("missing api name")
 	}
@@ -53,19 +53,19 @@ func (req *createAPIRequest) ValidateAPI(c echo.Context) (*models.API, error) {
 	if !hasOrg {
 		return nil, errors.New("user is not org member")
 	}
-	return &models.API{
+	return &models.Resource{
 		OrganizationID: *req.OrganizationID,
 		OwnerID:        user.ID,
 		Name:           req.Name,
 	}, nil
 }
 
-func createAPIHandler(c echo.Context) error {
-	req := &createAPIRequest{}
+func createResourceHandler(c echo.Context) error {
+	req := &createResourceRequest{}
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	api, err := req.ValidateAPI(c)
+	api, err := req.Validate(c)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -75,12 +75,12 @@ func createAPIHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, api)
 }
 
-type deleteAPIRequest struct {
+type deleteResourceRequest struct {
 	ID *int
 }
 
-func deleteAPIHandler(c echo.Context) error {
-	req := &deleteAPIRequest{}
+func deleteResourceHandler(c echo.Context) error {
+	req := &deleteResourceRequest{}
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
@@ -88,26 +88,26 @@ func deleteAPIHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	api, err := ctl(c).APIByID(*req.ID)
+	resource, err := ctl(c).ResourceByID(*req.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	if api.OwnerID != user.ID {
+	if resource.OwnerID != user.ID {
 		return c.JSON(http.StatusForbidden, "user cannot edit org")
 	}
 	// TODO deal with orphaned schemas, headers, etc
-	if err := ctl(c).Delete(&api).Error; err != nil {
+	if err := ctl(c).Delete(&resource).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)
 }
 
-type updateAPIRequest struct {
+type updateResourceRequest struct {
 	ID   *int
 	Name *string
 }
 
-func (req updateAPIRequest) Validate() error {
+func (req updateResourceRequest) Validate() error {
 	if req.ID == nil {
 		return errors.New("missing id")
 	}
@@ -117,47 +117,47 @@ func (req updateAPIRequest) Validate() error {
 	return nil
 }
 
-func updateAPIHandler(c echo.Context) error {
-	req := &updateAPIRequest{}
+func updateResourceHandler(c echo.Context) error {
+	req := &updateResourceRequest{}
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	if err := req.Validate(); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	api, err := ctl(c).APIByID(*req.ID)
+	resource, err := ctl(c).ResourceByID(*req.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	userModel, err := ctl(c).GetUserByID(api.OwnerID)
+	userModel, err := ctl(c).GetUserByID(resource.OwnerID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	if userModel.UserName != usr(c) {
 		return c.JSON(http.StatusForbidden, "user cannot edit api")
 	}
-	api.Name = req.Name
-	if err := ctl(c).Save(api).Error; err != nil {
+	resource.Name = req.Name
+	if err := ctl(c).Save(resource).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, api)
+	return c.JSON(http.StatusOK, resource)
 }
 
-func getAPIsHandler(c echo.Context) error {
+func getResourcesHandler(c echo.Context) error {
 	user, err := ctl(c).GetOrCreateUserByName(usr(c))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	apis, err := ctl(c).UserAPIs(user)
+	resources, err := ctl(c).UserResources(user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	if len(apis) == 0 {
-		api, err := ctl(c).CreateAPIForUser(user)
+	if len(resources) == 0 {
+		resource, err := ctl(c).CreateResourceForUser(user)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
-		apis = append(apis, api)
+		resources = append(resources, resource)
 	}
-	return c.JSON(http.StatusOK, apis)
+	return c.JSON(http.StatusOK, resources)
 }

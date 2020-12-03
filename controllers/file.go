@@ -16,14 +16,14 @@ import (
 
 // ProcessFileInput input to processfile
 type ProcessFileInput struct {
-	User      string
-	SchemaID  *int    `form:"id"`
-	APIID     *int    `json:"api_id" form:"api_id"`
-	Name      *string `form:"name"`
-	FileName  string
-	Extension *string
-	File      multipart.File
-	NewSchema bool
+	User       string
+	SchemaID   *int    `form:"id"`
+	ResourceID *int    `form:"resource_id"`
+	Name       *string `form:"name"`
+	FileName   string
+	Extension  *string
+	File       multipart.File
+	NewSchema  bool
 }
 
 // Validate checks that inputs are correct
@@ -34,8 +34,8 @@ func (input *ProcessFileInput) Validate(db *gorm.DB) error {
 	if !common.ValidExtension(*input.Extension) {
 		return errors.Errorf("not valid extension: %s", *input.Extension)
 	}
-	if input.APIID == nil {
-		return errors.New("schema missing api_id")
+	if input.ResourceID == nil {
+		return errors.New("schema missing resource_id")
 	}
 	if !input.NewSchema && input.SchemaID == nil {
 		return errors.New("schema missing id")
@@ -59,8 +59,8 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 		schema.Name = input.Name
 	} else {
 		schema = &models.Schema{
-			APIID: *input.APIID,
-			Name:  input.Name,
+			ResourceID: *input.ResourceID,
+			Name:       input.Name,
 		}
 	}
 

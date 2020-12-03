@@ -4,18 +4,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func routes(e *echo.Group) {
-	apiRoutes(e)
+func apiRoutes(e *echo.Group) {
+	resourceRoutes(e)
 	orgRoutes(e)
 	schemaRoutes(e)
 }
 
-func apiRoutes(e *echo.Group) {
-	e.GET("/apis", getAPIsHandler)
-	e.GET("/api/:id", getAPIHandler)
-	e.POST("/api", createAPIHandler)
-	e.DELETE("/api", deleteAPIHandler)
-	e.PATCH("/api", updateAPIHandler)
+func resourceRoutes(e *echo.Group) {
+	e.GET("/resources", getResourcesHandler)
+	e.GET("/resource/:id", getResourceHandler)
+	e.POST("/resource", createResourceHandler)
+	e.DELETE("/resource", deleteResourceHandler)
+	e.PATCH("/resource", updateResourceHandler)
 }
 
 func orgRoutes(e *echo.Group) {
@@ -26,7 +26,7 @@ func orgRoutes(e *echo.Group) {
 }
 
 func schemaRoutes(e *echo.Group) {
-	e.GET("/schema/:apiID", getSchemaHandler)
+	e.GET("/schema/:resourceID", getSchemaHandler)
 	e.PATCH("/schema", updateSchemaHandler)
 	e.DELETE("/schema", deleteSchemaHandler)
 	e.PATCH("/schema/file-upload", schemaFilePatchHandler)

@@ -2,7 +2,7 @@ package models
 
 // Models master list of models
 var Models = []interface{}{
-	&API{},
+	&Resource{},
 	&Header{},
 	&Schema{},
 	&User{},

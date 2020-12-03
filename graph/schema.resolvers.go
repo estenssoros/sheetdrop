@@ -5,22 +5,11 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/estenssoros/sheetdrop/graph/generated"
 	"github.com/estenssoros/sheetdrop/models"
 )
-
-func (r *aPIResolver) Organization(ctx context.Context, obj *models.API) (*models.Organization, error) {
-	return r.OrganizationByID(obj.OrganizationID)
-}
-
-func (r *aPIResolver) AuthToken(ctx context.Context, obj *models.API) (string, error) {
-	return obj.AuthToken.String(), nil
-}
-
-func (r *aPIResolver) Schemas(ctx context.Context, obj *models.API) ([]*models.Schema, error) {
-	return r.APISChemas(obj)
-}
 
 func (r *headerResolver) Schema(ctx context.Context, obj *models.Header) (*models.Schema, error) {
 	return r.SchemaByID(obj.SchemaID)
@@ -34,20 +23,29 @@ func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
 	return r.ListUsers()
 }
 
+func (r *resourceResolver) Organization(ctx context.Context, obj *models.Resource) (*models.Organization, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *resourceResolver) AuthToken(ctx context.Context, obj *models.Resource) (string, error) {
+	return obj.AuthToken.String(), nil
+}
+
+func (r *resourceResolver) Schemas(ctx context.Context, obj *models.Resource) ([]*models.Schema, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *schemaResolver) UUID(ctx context.Context, obj *models.Schema) (string, error) {
 	return obj.UUID.String(), nil
 }
 
-func (r *schemaResolver) API(ctx context.Context, obj *models.Schema) (*models.API, error) {
-	return r.APIByID(obj.APIID)
+func (r *schemaResolver) Resource(ctx context.Context, obj *models.Schema) (*models.Resource, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *userResolver) Organizations(ctx context.Context, obj *models.User) ([]*models.Organization, error) {
 	return r.UserOrganizations(obj)
 }
-
-// API returns generated.APIResolver implementation.
-func (r *Resolver) API() generated.APIResolver { return &aPIResolver{r} }
 
 // Header returns generated.HeaderResolver implementation.
 func (r *Resolver) Header() generated.HeaderResolver { return &headerResolver{r} }
@@ -58,15 +56,18 @@ func (r *Resolver) Organization() generated.OrganizationResolver { return &organ
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// Resource returns generated.ResourceResolver implementation.
+func (r *Resolver) Resource() generated.ResourceResolver { return &resourceResolver{r} }
+
 // Schema returns generated.SchemaResolver implementation.
 func (r *Resolver) Schema() generated.SchemaResolver { return &schemaResolver{r} }
 
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
-type aPIResolver struct{ *Resolver }
 type headerResolver struct{ *Resolver }
 type organizationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type resourceResolver struct{ *Resolver }
 type schemaResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
