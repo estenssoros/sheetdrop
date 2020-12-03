@@ -6,17 +6,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Schema everything a schema must do
-type Schema interface {
-	UpdateSchema(*UpdateSchemaInput) (*models.Schema, error)
-	UserFromSchemaID(schemaID int) (*models.User, error)
-	DeleteSchema(*models.Schema) error
-	SchemaByID(int) (*models.Schema, error)
-	SchemaRelations([]*models.Schema) error
-	SchemaHeaders(*models.Schema) ([]*models.Header, error)
-	// SchemaHeadersMap(*models.Schema) (map[string]*models.Header, error)
-}
-
 // SchemaHeaders gets headers for a schema
 func (c *Controller) SchemaHeaders(schema *models.Schema) ([]*models.Header, error) {
 	headers := []*models.Header{}
@@ -110,4 +99,8 @@ func (c *Controller) SchemaRelations(schemas []*models.Schema) error {
 		}
 	}
 	return nil
+}
+
+func (c *Controller) SchemasForAPI(obj *models.API) ([]*models.Schema, error) {
+	return nil, errNotImplemented
 }

@@ -2,15 +2,8 @@ package controllers
 
 import (
 	"github.com/estenssoros/sheetdrop/models"
+	"github.com/pkg/errors"
 )
-
-// User everything a user must do
-type User interface {
-	GetUserByName(string) (*models.User, error)
-	GetOrCreateUserByName(string) (*models.User, error)
-	GetUserByID(int) (*models.User, error)
-	UserOrganizations(*models.User) ([]*models.Organization, error)
-}
 
 // GetUserByName gets user model by username
 func (c *Controller) GetUserByName(userName string) (*models.User, error) {
@@ -38,4 +31,10 @@ func (c *Controller) UserOrganizations(obj *models.User) ([]*models.Organization
 		Where("organization_user.user_id=?", obj.ID).
 		Find(&m).
 		Error
+}
+
+var errNotImplemented = errors.New("not implemented")
+
+func (c *Controller) GetUserOrgsResponse(user *models.User) ([]*models.Organization, error) {
+	return nil, errNotImplemented
 }

@@ -14,11 +14,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// File interface for file operations
-type File interface {
-	ProcessFile(*ProcessFileInput) (schema *models.Schema, err error)
-}
-
 // ProcessFileInput input to processfile
 type ProcessFileInput struct {
 	User      string

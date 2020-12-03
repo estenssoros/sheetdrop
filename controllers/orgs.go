@@ -6,16 +6,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Org everything an org must do
-type Org interface {
-	OrganizationByID(int) (*models.Organization, error)
-	OrganizationUsers(*models.Organization) ([]*models.User, error)
-	UserOrgsResponse(*models.User) ([]*responses.Organization, error)
-	CreateOrg(*CreateOrgInput) error
-	UserCanEditOrg(*models.User, *models.Organization) (bool, error)
-	UpdateOrg(*models.Organization) error
-}
-
 // UserOrgsResponse get orgs for a user
 func (c *Controller) UserOrgsResponse(user *models.User) ([]*responses.Organization, error) {
 	orgs := []*responses.Organization{}
@@ -36,7 +26,7 @@ type CreateOrgInput struct {
 }
 
 // CreateOrg create an org
-func (c *Controller) c(input *CreateOrgInput) error {
+func (c *Controller) CreateOrg(input *CreateOrgInput) error {
 	if err := c.Validate(input); err != nil {
 		return errors.Wrap(err, "Validate")
 	}

@@ -4,16 +4,6 @@ import (
 	"github.com/estenssoros/sheetdrop/models"
 )
 
-// API interface for api operations
-type API interface {
-	UserAPIs(*models.User) ([]*models.API, error)
-	CreateAPIForUser(*models.User) (*models.API, error)
-	APIByID(int) (*models.API, error)
-	UserFromAPIID(int) (*models.User, error)
-	APISChemas(*models.API) ([]*models.Schema, error)
-	CreateSchemaForAPI(*models.API) (*models.Schema, error)
-}
-
 // UserAPIs gets a user's apis
 func (c *Controller) UserAPIs(user *models.User) ([]*models.API, error) {
 	apis := []*models.API{}
