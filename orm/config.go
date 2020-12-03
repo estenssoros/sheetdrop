@@ -5,39 +5,41 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var (
-	dialectMySQL = "mysql"
+	dialectPSQL = "psql"
 )
 
-type config struct {
+// Config for database connection
+type Config struct {
 	Database string
 	Host     string
 	User     string
-	Password string `json:"-"`
+	Password string
 	Dialect  string
 }
 
-func (c config) String() string {
+func (c Config) String() string {
 	ju, _ := json.MarshalIndent(c, "", " ")
 	return string(ju)
 }
 
-func (c *config) URL() (string, error) {
+// URL creates a connection url
+func (c *Config) URL() string {
 	switch c.Dialect {
-	case dialectMySQL:
-		return c.urlMySQL(), nil
+	case dialectPSQL:
+		return c.urlPSQL()
 	default:
-		return "", errors.New("no dialect")
+		return ""
 	}
 }
 
-func (c *config) urlMySQL() string {
+func (c *Config) urlPSQL() string {
 	return fmt.Sprintf(
-		"%s:%s@(%s)/%s?parseTime=true",
+		"user=%s password=%s host=%s dbname=%s port=5432 sslmode=disable",
 		c.User,
 		c.Password,
 		c.Host,
@@ -45,11 +47,15 @@ func (c *config) urlMySQL() string {
 	)
 }
 
-func (c *config) dialector() gorm.Dialector {
+func (c *Config) dialector() (gorm.Dialector, error) {
 	switch c.Dialect {
-	case dialectMySQL:
-		return mysql.Open(c.urlMySQL())
+	case dialectPSQL:
+		return postgres.Open(c.URL()), nil
 	default:
-		return nil
+		return nil, errors.Errorf("unknown dialect: %s", c.Dialect)
 	}
+}
+
+func (c *Config) database() string {
+	return c.Database
 }

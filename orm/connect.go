@@ -6,63 +6,86 @@ import (
 	"time"
 
 	"github.com/estenssoros/sheetdrop/constants"
+	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	_ "gorm.io/driver/mysql" //mysql driver
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-// ConnectTimeout times out after 5 seconds
-func ConnectTimeout() (*gorm.DB, error) {
+// ConnectConfig times out after 5 seconds
+func ConnectConfig(config *Config) (*gorm.DB, error) {
+	if config.Database == "" {
+		return nil, errors.New("blank database")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	ch := make(chan struct {
-		conn *gorm.DB
-		err  error
+		db  *gorm.DB
+		err error
 	}, 1)
 	go func() {
-		conn, err := connect()
+		db, err := openConnection(config)
 		ch <- struct {
-			conn *gorm.DB
-			err  error
-		}{conn, errors.Wrap(err, "connect db")}
+			db  *gorm.DB
+			err error
+		}{db, errors.Wrap(err, "openConnection")}
 	}()
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	case pack := <-ch:
-		return pack.conn, pack.err
+		return pack.db, pack.err
 	}
 }
 
-// Connect wrapper for connect timeout
-func Connect() (*gorm.DB, error) {
+type connector interface {
+	URL() string
+	dialector() (gorm.Dialector, error)
+	database() string
+}
+
+func openConnection(conn connector) (*gorm.DB, error) {
 	start := time.Now()
 	defer func() {
 		logrus.Infof("latency: %v", time.Since(start))
 	}()
-	return ConnectTimeout()
+	logrus.Infof("connecting to: %s", conn.database())
+	dialect, err := conn.dialector()
+	if err != nil {
+		return nil, errors.Wrap(err, "conn.dialector")
+	}
+	db, err := gorm.Open(dialect, &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "gorm.Open")
+	}
+	logrus.Infof("dialect: %s", db.Dialector.Name())
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, errors.Wrap(err, "db.DB")
+	}
+	sqlDB.SetMaxIdleConns(1)
+	sqlDB.SetMaxOpenConns(1)
+	return db, nil
 }
 
-// Connect connect to a database environment
-func connect() (*gorm.DB, error) {
-	return connectConfig(&config{
+// Connect connect to a database by name
+func Connect() (*gorm.DB, error) {
+	if err := godotenv.Load(); err != nil {
+		return nil, errors.Wrap(err, "godotenv.Load")
+	}
+	config := &Config{
+		Dialect:  os.Getenv(constants.EnvDatabaseDialect),
 		Database: os.Getenv(constants.EnvDataBaseName),
 		Host:     os.Getenv(constants.EnvDataBaseHost),
 		User:     os.Getenv(constants.EnvDataBaseUser),
 		Password: os.Getenv(constants.EnvDataBasePassword),
-		Dialect:  os.Getenv(constants.EnvDatabaseDialect),
-	})
-}
-
-func connectConfig(conf *config) (*gorm.DB, error) {
-	logrus.Info(conf)
-	db, err := gorm.Open(conf.dialector(), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
-	})
+	}
+	db, err := ConnectConfig(config)
 	if err != nil {
-		return nil, errors.Wrap(err, "open db")
+		return nil, errors.Wrap(err, "ConnectConfig")
 	}
 	return db, nil
 }
