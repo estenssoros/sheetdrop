@@ -6,10 +6,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func extractController(c echo.Context) controllers.Interface {
-	return c.Get(constants.ContextController).(controllers.Interface)
+func ctl(c echo.Context) *controllers.Controller {
+	return c.Get(constants.ContextController).(*controllers.Controller)
 }
 
-func extractUserName(c echo.Context) string {
+func usr(c echo.Context) string {
 	return c.Get(constants.ContextUserName).(string)
 }

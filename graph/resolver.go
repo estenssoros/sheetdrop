@@ -10,13 +10,13 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	controllers.Interface
+	*controllers.Controller
 	sema chan struct{}
 }
 
 func NewResolver(db *gorm.DB) *Resolver {
 	return &Resolver{
-		Interface: controllers.New(db),
-		sema:      make(chan struct{}, 10),
+		Controller: controllers.New(db),
+		sema:       make(chan struct{}, 10),
 	}
 }

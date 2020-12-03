@@ -20,7 +20,7 @@ type Schema interface {
 // SchemaHeaders gets headers for a schema
 func (c *Controller) SchemaHeaders(schema *models.Schema) ([]*models.Header, error) {
 	headers := []*models.Header{}
-	return headers, c.db.Where("schema_id=?", schema.ID).Find(&headers).Error
+	return headers, c.Where("schema_id=?", schema.ID).Find(&headers).Error
 }
 
 // SchemaHeadersSet headers set for a schema
@@ -55,17 +55,17 @@ func (c *Controller) UpdateSchema(input *UpdateSchemaInput) (*models.Schema, err
 		return nil, errors.Wrap(err, "validate")
 	}
 	schema := &models.Schema{}
-	if err := c.db.Where("id=?", *input.ID).First(schema).Error; err != nil {
+	if err := c.Where("id=?", *input.ID).First(schema).Error; err != nil {
 		return nil, err
 	}
 	schema.Name = input.Name
-	return schema, c.db.Save(schema).Error
+	return schema, c.Save(schema).Error
 }
 
 // UserFromSchemaID get a user from a schema
 func (c *Controller) UserFromSchemaID(schemaID int) (*models.User, error) {
 	user := &models.User{}
-	return user, c.db.Model(user).
+	return user, c.Model(user).
 		Joins("JOIN api ON api.owner_id = user.id").
 		Joins("JOIN schema ON schema.api_id = api.id").
 		Where("schema.id=?", schemaID).
@@ -74,13 +74,13 @@ func (c *Controller) UserFromSchemaID(schemaID int) (*models.User, error) {
 
 // DeleteSchema deletes a schema
 func (c *Controller) DeleteSchema(schema *models.Schema) error {
-	return c.Delete(schema)
+	return c.Delete(schema).Error
 }
 
 // SchemaByID fetch a schema by id
 func (c *Controller) SchemaByID(schemaID int) (*models.Schema, error) {
 	schema := &models.Schema{}
-	return schema, c.db.Where("id=?", schemaID).First(schema).Error
+	return schema, c.Where("id=?", schemaID).First(schema).Error
 }
 
 // SchemaRelations populate schema relations
@@ -92,7 +92,7 @@ func (c *Controller) SchemaRelations(schemas []*models.Schema) error {
 	headersMap := map[int][]*models.Header{}
 	{
 		headers := []*models.Header{}
-		if err := c.db.Where("schema_id IN (?)", ids).Order("idx").Find(&headers).Error; err != nil {
+		if err := c.Where("schema_id IN (?)", ids).Order("idx").Find(&headers).Error; err != nil {
 			return err
 		}
 		for _, h := range headers {

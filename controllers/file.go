@@ -92,6 +92,7 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 	if err := processor(); err != nil {
 		return nil, errors.Wrap(err, *input.Extension)
 	}
+
 	headerSet, err := c.SchemaHeadersSet(schema)
 	if err != nil {
 		return nil, errors.Wrap(err, "GetSchemaHeadersSet")
@@ -99,7 +100,7 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 	{
 		headers := headerSet.ToCreate(schema.Headers)
 		if len(headers) > 0 {
-			if err := c.db.Create(headers).Error; err != nil {
+			if err := c.Create(headers).Error; err != nil {
 				return nil, errors.Wrap(err, "createHeaders")
 			}
 		}
@@ -107,7 +108,7 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 	{
 		headers := headerSet.ToUpdate(schema.Headers)
 		if len(headers) > 0 {
-			if err := c.db.Save(headers).Error; err != nil {
+			if err := c.Save(headers).Error; err != nil {
 				return nil, errors.Wrap(err, "createHeaders")
 			}
 		}
@@ -115,13 +116,13 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 	{
 		headers := headerSet.ToDelete(schema.Headers)
 		if len(headers) > 0 {
-			if err := c.db.Delete(headers).Error; err != nil {
+			if err := c.Delete(headers).Error; err != nil {
 				return nil, errors.Wrap(err, "createHeaders")
 			}
 		}
 	}
 
-	if err := c.DB().Save(schema).Error; err != nil {
+	if err := c.Save(schema).Error; err != nil {
 		return nil, errors.Wrap(err, "save schema")
 	}
 	return schema, nil

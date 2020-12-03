@@ -20,27 +20,26 @@ func getSchemaHandler(c echo.Context) error {
 	if apiID == 0 {
 		return c.JSON(http.StatusBadRequest, "no id sent")
 	}
-	ctl := extractController(c)
-	user, err := ctl.UserFromAPIID(apiID)
+	user, err := ctl(c).UserFromAPIID(apiID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	if user.UserName != extractUserName(c) {
+	if user.UserName != usr(c) {
 		return c.JSON(http.StatusForbidden, "user names do not match")
 	}
-	schemas, err := ctl.SchemasForAPI(&models.API{
+	schemas, err := ctl(c).SchemasForAPI(&models.API{
 		ID: apiID,
 	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	if len(schemas) > 0 {
-		if err := ctl.SchemaRelations(schemas); err != nil {
+		if err := ctl(c).SchemaRelations(schemas); err != nil {
 			return c.JSON(http.StatusInternalServerError, err)
 		}
 		return c.JSON(http.StatusOK, schemas)
 	}
-	schema, err := ctl.CreateSchemaForAPI(&models.API{
+	schema, err := ctl(c).CreateSchemaForAPI(&models.API{
 		ID: apiID,
 	})
 	if err != nil {
@@ -54,8 +53,7 @@ func updateSchemaHandler(c echo.Context) error {
 	if err := c.Bind(input); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	ctl := extractController(c)
-	schema, err := ctl.UpdateSchema(input)
+	schema, err := ctl(c).UpdateSchema(input)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -67,8 +65,7 @@ func deleteSchemaHandler(c echo.Context) error {
 	if err := c.Bind(schema); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	ctl := extractController(c)
-	if err := ctl.DeleteSchema(schema); err != nil {
+	if err := ctl(c).DeleteSchema(schema); err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)
@@ -79,7 +76,7 @@ func schemaFilePatchHandler(c echo.Context) error {
 	if err := c.Bind(input); err != nil {
 		return responses.Error(c, http.StatusBadRequest, errors.Wrap(err, "c.Bind"))
 	}
-	input.User = extractUserName(c)
+	input.User = usr(c)
 	return fileUploadHandler(c, input)
 }
 
@@ -88,7 +85,7 @@ func schemaFileUploadHandler(c echo.Context) error {
 	if err := c.Bind(input); err != nil {
 		return responses.Error(c, http.StatusBadRequest, errors.Wrap(err, "c.Bind"))
 	}
-	input.User = extractUserName(c)
+	input.User = usr(c)
 	input.NewSchema = true
 	return fileUploadHandler(c, input)
 }
@@ -106,8 +103,7 @@ func fileUploadHandler(c echo.Context, input *controllers.ProcessFileInput) erro
 	}
 
 	input.File = multiPart
-	ctl := extractController(c)
-	resp, err := ctl.ProcessFile(input)
+	resp, err := ctl(c).ProcessFile(input)
 	if err != nil {
 		return responses.Error(c, http.StatusInternalServerError, errors.Wrap(err, "controllers.ProcessFile"))
 	}
