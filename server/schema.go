@@ -12,24 +12,22 @@ import (
 )
 
 func getSchemaHandler(c echo.Context) error {
-	apiID, err := strconv.Atoi(c.Param("apiID"))
+	id, err := strconv.Atoi(c.Param("apiID"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 
 	}
-	if apiID == 0 {
+	if id == 0 {
 		return c.JSON(http.StatusBadRequest, "no id sent")
 	}
-	user, err := ctl(c).UserFromResourceID(apiID)
+	user, err := ctl(c).UserFromResourceID(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	if user.UserName != usr(c) {
 		return c.JSON(http.StatusForbidden, "user names do not match")
 	}
-	schemas, err := ctl(c).SchemasForResources(&models.Resource{
-		ID: apiID,
-	})
+	schemas, err := ctl(c).SchemasForResource(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -40,7 +38,7 @@ func getSchemaHandler(c echo.Context) error {
 		return c.JSON(http.StatusOK, schemas)
 	}
 	schema, err := ctl(c).CreateSchemaForResource(&models.Resource{
-		ID: apiID,
+		ID: id,
 	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())

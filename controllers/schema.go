@@ -101,6 +101,7 @@ func (c *Controller) SchemaRelations(schemas []*models.Schema) error {
 	return nil
 }
 
-func (c *Controller) SchemasForResources(obj *models.Resource) ([]*models.Schema, error) {
-	return nil, errNotImplemented
+func (c *Controller) SchemasForResource(resourceID int) ([]*models.Schema, error) {
+	schemas := []*models.Schema{}
+	return schemas, c.Where("resource_id=?", resourceID).Find(&schemas).Error
 }

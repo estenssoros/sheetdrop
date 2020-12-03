@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/estenssoros/sheetdrop/graph/generated"
 	"github.com/estenssoros/sheetdrop/models"
@@ -24,7 +23,7 @@ func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
 }
 
 func (r *resourceResolver) Organization(ctx context.Context, obj *models.Resource) (*models.Organization, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.OrganizationByID(obj.OrganizationID)
 }
 
 func (r *resourceResolver) AuthToken(ctx context.Context, obj *models.Resource) (string, error) {
@@ -32,7 +31,7 @@ func (r *resourceResolver) AuthToken(ctx context.Context, obj *models.Resource) 
 }
 
 func (r *resourceResolver) Schemas(ctx context.Context, obj *models.Resource) ([]*models.Schema, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.SchemasForResource(obj.ID)
 }
 
 func (r *schemaResolver) UUID(ctx context.Context, obj *models.Schema) (string, error) {
@@ -40,7 +39,7 @@ func (r *schemaResolver) UUID(ctx context.Context, obj *models.Schema) (string, 
 }
 
 func (r *schemaResolver) Resource(ctx context.Context, obj *models.Schema) (*models.Resource, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.ResourceByID(obj.ResourceID)
 }
 
 func (r *userResolver) Organizations(ctx context.Context, obj *models.User) ([]*models.Organization, error) {
