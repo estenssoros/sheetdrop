@@ -59,10 +59,25 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddUserToOrg func(childComplexity int, userID int, orgID int) int
-		CreateOrg    func(childComplexity int, userID int, orgName string) int
-		CreateUser   func(childComplexity int, userName string) int
-		DeleteUser   func(childComplexity int, id int) int
+		AddUserToOrg         func(childComplexity int, userID int, orgID int) int
+		CreateOrg            func(childComplexity int, userID int, orgName string) int
+		CreateResource       func(childComplexity int, orgID int, resourceName string) int
+		CreateSchema         func(childComplexity int, name string) int
+		CreateSchemaWithFile func(childComplexity int, name string, file graphql.Upload) int
+		CreateUser           func(childComplexity int, userName string) int
+		DeleteOrg            func(childComplexity int, id int) int
+		DeleteResource       func(childComplexity int, id int) int
+		DeleteSchema         func(childComplexity int, id int) int
+		DeleteUser           func(childComplexity int, id int) int
+		GetOrg               func(childComplexity int, id int) int
+		GetResource          func(childComplexity int, id int) int
+		GetSchema            func(childComplexity int, id int) int
+		GetSchemas           func(childComplexity int, resourceID int) int
+		GetUser              func(childComplexity int, id int) int
+		RemoveUserFromOrg    func(childComplexity int, userID int, orgID int) int
+		UpdateResource       func(childComplexity int, id int, resourceName string) int
+		UpdateSchemaFile     func(childComplexity int, id int, file graphql.Upload) int
+		UpdateSchemaName     func(childComplexity int, id int, name string) int
 	}
 
 	Organization struct {
@@ -112,10 +127,25 @@ type HeaderResolver interface {
 	Schema(ctx context.Context, obj *models.Header) (*models.Schema, error)
 }
 type MutationResolver interface {
+	GetUser(ctx context.Context, id int) (*models.User, error)
 	CreateUser(ctx context.Context, userName string) (*models.User, error)
-	DeleteUser(ctx context.Context, id int) (string, error)
+	DeleteUser(ctx context.Context, id int) (*models.User, error)
+	GetOrg(ctx context.Context, id int) (*models.Organization, error)
 	CreateOrg(ctx context.Context, userID int, orgName string) (*models.Organization, error)
+	DeleteOrg(ctx context.Context, id int) (*models.Organization, error)
 	AddUserToOrg(ctx context.Context, userID int, orgID int) (*models.Organization, error)
+	RemoveUserFromOrg(ctx context.Context, userID int, orgID int) (*models.Organization, error)
+	GetResource(ctx context.Context, id int) (*models.Resource, error)
+	CreateResource(ctx context.Context, orgID int, resourceName string) (*models.Resource, error)
+	DeleteResource(ctx context.Context, id int) (*models.Resource, error)
+	UpdateResource(ctx context.Context, id int, resourceName string) (*models.Resource, error)
+	GetSchema(ctx context.Context, id int) (*models.Schema, error)
+	GetSchemas(ctx context.Context, resourceID int) ([]*models.Schema, error)
+	DeleteSchema(ctx context.Context, id int) (*models.Schema, error)
+	CreateSchema(ctx context.Context, name string) (*models.Schema, error)
+	CreateSchemaWithFile(ctx context.Context, name string, file graphql.Upload) (*models.Schema, error)
+	UpdateSchemaName(ctx context.Context, id int, name string) (*models.Schema, error)
+	UpdateSchemaFile(ctx context.Context, id int, file graphql.Upload) (*models.Schema, error)
 }
 type OrganizationResolver interface {
 	User(ctx context.Context, obj *models.Organization) ([]*models.User, error)
@@ -222,6 +252,42 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateOrg(childComplexity, args["userID"].(int), args["orgName"].(string)), true
 
+	case "Mutation.createResource":
+		if e.complexity.Mutation.CreateResource == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createResource_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateResource(childComplexity, args["orgID"].(int), args["resourceName"].(string)), true
+
+	case "Mutation.createSchema":
+		if e.complexity.Mutation.CreateSchema == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createSchema_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateSchema(childComplexity, args["name"].(string)), true
+
+	case "Mutation.createSchemaWithFile":
+		if e.complexity.Mutation.CreateSchemaWithFile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createSchemaWithFile_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateSchemaWithFile(childComplexity, args["name"].(string), args["file"].(graphql.Upload)), true
+
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
 			break
@@ -234,6 +300,42 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateUser(childComplexity, args["userName"].(string)), true
 
+	case "Mutation.deleteOrg":
+		if e.complexity.Mutation.DeleteOrg == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteOrg_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteOrg(childComplexity, args["id"].(int)), true
+
+	case "Mutation.deleteResource":
+		if e.complexity.Mutation.DeleteResource == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteResource_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteResource(childComplexity, args["id"].(int)), true
+
+	case "Mutation.deleteSchema":
+		if e.complexity.Mutation.DeleteSchema == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSchema_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSchema(childComplexity, args["id"].(int)), true
+
 	case "Mutation.deleteUser":
 		if e.complexity.Mutation.DeleteUser == nil {
 			break
@@ -245,6 +347,114 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(int)), true
+
+	case "Mutation.getOrg":
+		if e.complexity.Mutation.GetOrg == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_getOrg_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GetOrg(childComplexity, args["id"].(int)), true
+
+	case "Mutation.getResource":
+		if e.complexity.Mutation.GetResource == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_getResource_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GetResource(childComplexity, args["id"].(int)), true
+
+	case "Mutation.getSchema":
+		if e.complexity.Mutation.GetSchema == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_getSchema_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GetSchema(childComplexity, args["id"].(int)), true
+
+	case "Mutation.getSchemas":
+		if e.complexity.Mutation.GetSchemas == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_getSchemas_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GetSchemas(childComplexity, args["resourceID"].(int)), true
+
+	case "Mutation.getUser":
+		if e.complexity.Mutation.GetUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_getUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.GetUser(childComplexity, args["id"].(int)), true
+
+	case "Mutation.removeUserFromOrg":
+		if e.complexity.Mutation.RemoveUserFromOrg == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_removeUserFromOrg_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RemoveUserFromOrg(childComplexity, args["userID"].(int), args["orgID"].(int)), true
+
+	case "Mutation.updateResource":
+		if e.complexity.Mutation.UpdateResource == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateResource_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateResource(childComplexity, args["id"].(int), args["resourceName"].(string)), true
+
+	case "Mutation.updateSchemaFile":
+		if e.complexity.Mutation.UpdateSchemaFile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateSchemaFile_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateSchemaFile(childComplexity, args["id"].(int), args["file"].(graphql.Upload)), true
+
+	case "Mutation.updateSchemaName":
+		if e.complexity.Mutation.UpdateSchemaName == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateSchemaName_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateSchemaName(childComplexity, args["id"].(int), args["name"].(string)), true
 
 	case "Organization.createdAt":
 		if e.complexity.Organization.CreatedAt == nil {
@@ -509,14 +719,33 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "graph/mutation.graphqls", Input: `scalar Void
+	{Name: "graph/mutation.graphqls", Input: `scalar Upload
 
 type Mutation {
+  getUser(id: ID!): User!
   createUser(userName: String!): User!
-  deleteUser(id: ID!): Void!
+  deleteUser(id: ID!): User!
+
+  getOrg(id: ID!): Organization!
   createOrg(userID: ID!, orgName: String!): Organization!
+  deleteOrg(id: ID!): Organization!
   addUserToOrg(userID: ID!, orgID: ID!): Organization!
-}`, BuiltIn: false},
+  removeUserFromOrg(userID: ID!, orgID: ID!): Organization!
+
+  getResource(id: ID!): Resource!
+  createResource(orgID: ID!, resourceName: String!): Resource!
+  deleteResource(id: ID!): Resource!
+  updateResource(id: ID!, resourceName: String!): Resource!
+
+  getSchema(id: ID!): Schema!
+  getSchemas(resourceID: ID!): [Schema!]
+  deleteSchema(id: ID!): Schema!
+  createSchema(name: String!): Schema!
+  createSchemaWithFile(name: String!, file: Upload!): Schema!
+  updateSchemaName(id: ID!, name: String!): Schema!
+  updateSchemaFile(id: ID!, file: Upload!): Schema!
+}
+`, BuiltIn: false},
 	{Name: "graph/schema.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
@@ -631,6 +860,69 @@ func (ec *executionContext) field_Mutation_createOrg_args(ctx context.Context, r
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createResource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["orgID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orgID"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orgID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["resourceName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceName"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resourceName"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createSchemaWithFile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg0
+	var arg1 graphql.Upload
+	if tmp, ok := rawArgs["file"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
+		arg1, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["file"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createSchema_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -646,6 +938,51 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteOrg_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteResource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSchema_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -658,6 +995,177 @@ func (ec *executionContext) field_Mutation_deleteUser_args(ctx context.Context, 
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_getOrg_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_getResource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_getSchema_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_getSchemas_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["resourceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resourceID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_getUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_removeUserFromOrg_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["userID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userID"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["orgID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orgID"))
+		arg1, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orgID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateResource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["resourceName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceName"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resourceName"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSchemaFile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 graphql.Upload
+	if tmp, ok := rawArgs["file"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
+		arg1, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["file"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSchemaName_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg1
 	return args, nil
 }
 
@@ -954,6 +1462,48 @@ func (ec *executionContext) _Header_schema(ctx context.Context, field graphql.Co
 	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_getUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_getUser_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().GetUser(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐUser(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1033,9 +1583,51 @@ func (ec *executionContext) _Mutation_deleteUser(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*models.User)
 	fc.Result = res
-	return ec.marshalNVoid2string(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_getOrg(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_getOrg_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().GetOrg(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createOrg(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1064,6 +1656,48 @@ func (ec *executionContext) _Mutation_createOrg(ctx context.Context, field graph
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().CreateOrg(rctx, args["userID"].(int), args["orgName"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteOrg(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteOrg_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteOrg(rctx, args["id"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1120,6 +1754,507 @@ func (ec *executionContext) _Mutation_addUserToOrg(ctx context.Context, field gr
 	res := resTmp.(*models.Organization)
 	fc.Result = res
 	return ec.marshalNOrganization2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_removeUserFromOrg(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_removeUserFromOrg_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RemoveUserFromOrg(rctx, args["userID"].(int), args["orgID"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_getResource(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_getResource_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().GetResource(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Resource)
+	fc.Result = res
+	return ec.marshalNResource2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createResource(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createResource_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateResource(rctx, args["orgID"].(int), args["resourceName"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Resource)
+	fc.Result = res
+	return ec.marshalNResource2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteResource(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteResource_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteResource(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Resource)
+	fc.Result = res
+	return ec.marshalNResource2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateResource(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateResource_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateResource(rctx, args["id"].(int), args["resourceName"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Resource)
+	fc.Result = res
+	return ec.marshalNResource2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_getSchema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_getSchema_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().GetSchema(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Schema)
+	fc.Result = res
+	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_getSchemas(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_getSchemas_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().GetSchemas(rctx, args["resourceID"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Schema)
+	fc.Result = res
+	return ec.marshalOSchema2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchemaᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteSchema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteSchema_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSchema(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Schema)
+	fc.Result = res
+	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createSchema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createSchema_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateSchema(rctx, args["name"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Schema)
+	fc.Result = res
+	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createSchemaWithFile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createSchemaWithFile_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateSchemaWithFile(rctx, args["name"].(string), args["file"].(graphql.Upload))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Schema)
+	fc.Result = res
+	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateSchemaName(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateSchemaName_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateSchemaName(rctx, args["id"].(int), args["name"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Schema)
+	fc.Result = res
+	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateSchemaFile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateSchemaFile_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateSchemaFile(rctx, args["id"].(int), args["file"].(graphql.Upload))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Schema)
+	fc.Result = res
+	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Organization_id(ctx context.Context, field graphql.CollectedField, obj *models.Organization) (ret graphql.Marshaler) {
@@ -3299,6 +4434,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "getUser":
+			out.Values[i] = ec._Mutation_getUser(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -3309,13 +4449,80 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "getOrg":
+			out.Values[i] = ec._Mutation_getOrg(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createOrg":
 			out.Values[i] = ec._Mutation_createOrg(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "deleteOrg":
+			out.Values[i] = ec._Mutation_deleteOrg(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "addUserToOrg":
 			out.Values[i] = ec._Mutation_addUserToOrg(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "removeUserFromOrg":
+			out.Values[i] = ec._Mutation_removeUserFromOrg(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "getResource":
+			out.Values[i] = ec._Mutation_getResource(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createResource":
+			out.Values[i] = ec._Mutation_createResource(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteResource":
+			out.Values[i] = ec._Mutation_deleteResource(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateResource":
+			out.Values[i] = ec._Mutation_updateResource(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "getSchema":
+			out.Values[i] = ec._Mutation_getSchema(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "getSchemas":
+			out.Values[i] = ec._Mutation_getSchemas(ctx, field)
+		case "deleteSchema":
+			out.Values[i] = ec._Mutation_deleteSchema(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createSchema":
+			out.Values[i] = ec._Mutation_createSchema(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createSchemaWithFile":
+			out.Values[i] = ec._Mutation_createSchemaWithFile(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateSchemaName":
+			out.Values[i] = ec._Mutation_updateSchemaName(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateSchemaFile":
+			out.Values[i] = ec._Mutation_updateSchemaFile(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4075,6 +5282,21 @@ func (ec *executionContext) marshalNUUID2string(ctx context.Context, sel ast.Sel
 	return res
 }
 
+func (ec *executionContext) unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (graphql.Upload, error) {
+	res, err := graphql.UnmarshalUpload(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v graphql.Upload) graphql.Marshaler {
+	res := graphql.MarshalUpload(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNUser2githubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
@@ -4087,21 +5309,6 @@ func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋestenssorosᚋsheetdr
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNVoid2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNVoid2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
