@@ -50,12 +50,13 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Header struct {
-		DataType func(childComplexity int) int
-		ID       func(childComplexity int) int
-		Index    func(childComplexity int) int
-		IsID     func(childComplexity int) int
-		Name     func(childComplexity int) int
-		Schema   func(childComplexity int) int
+		DataType    func(childComplexity int) int
+		ForeignKeys func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Index       func(childComplexity int) int
+		IsID        func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Schema      func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -69,7 +70,8 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Name      func(childComplexity int) int
-		User      func(childComplexity int) int
+		Resources func(childComplexity int) int
+		Users     func(childComplexity int) int
 	}
 
 	Query struct {
@@ -89,6 +91,7 @@ type ComplexityRoot struct {
 	}
 
 	Schema struct {
+		CreatedAt   func(childComplexity int) int
 		Headers     func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
@@ -110,6 +113,7 @@ type ComplexityRoot struct {
 
 type HeaderResolver interface {
 	Schema(ctx context.Context, obj *models.Header) (*models.Schema, error)
+	ForeignKeys(ctx context.Context, obj *models.Header) ([]*models.Header, error)
 }
 type MutationResolver interface {
 	CreateUser(ctx context.Context, userName string) (*models.User, error)
@@ -118,7 +122,8 @@ type MutationResolver interface {
 	AddUserToOrg(ctx context.Context, userID int, orgID int) (*models.Organization, error)
 }
 type OrganizationResolver interface {
-	User(ctx context.Context, obj *models.Organization) ([]*models.User, error)
+	Users(ctx context.Context, obj *models.Organization) ([]*models.User, error)
+	Resources(ctx context.Context, obj *models.Organization) ([]*models.Resource, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*models.User, error)
@@ -136,6 +141,7 @@ type ResourceResolver interface {
 type SchemaResolver interface {
 	UUID(ctx context.Context, obj *models.Schema) (string, error)
 	Resource(ctx context.Context, obj *models.Schema) (*models.Resource, error)
+	Headers(ctx context.Context, obj *models.Schema) ([]*models.Header, error)
 }
 type UserResolver interface {
 	Organizations(ctx context.Context, obj *models.User) ([]*models.Organization, error)
@@ -162,6 +168,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Header.DataType(childComplexity), true
+
+	case "Header.foreignKeys":
+		if e.complexity.Header.ForeignKeys == nil {
+			break
+		}
+
+		return e.complexity.Header.ForeignKeys(childComplexity), true
 
 	case "Header.id":
 		if e.complexity.Header.ID == nil {
@@ -267,12 +280,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Name(childComplexity), true
 
-	case "Organization.user":
-		if e.complexity.Organization.User == nil {
+	case "Organization.resources":
+		if e.complexity.Organization.Resources == nil {
 			break
 		}
 
-		return e.complexity.Organization.User(childComplexity), true
+		return e.complexity.Organization.Resources(childComplexity), true
+
+	case "Organization.users":
+		if e.complexity.Organization.Users == nil {
+			break
+		}
+
+		return e.complexity.Organization.Users(childComplexity), true
 
 	case "Query.organizations":
 		if e.complexity.Query.Organizations == nil {
@@ -353,6 +373,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Resource.Schemas(childComplexity), true
+
+	case "Schema.createdAt":
+		if e.complexity.Schema.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Schema.CreatedAt(childComplexity), true
 
 	case "Schema.headers":
 		if e.complexity.Schema.Headers == nil {
@@ -542,7 +569,8 @@ type Organization {
   id: ID!
   createdAt: Time!
   name: String!
-  user: [User!]
+  users: [User!]
+  resources: [Resource!]
 }
 
 scalar UUID
@@ -557,6 +585,7 @@ type Resource {
 
 type Schema {
   id: ID!
+  createdAt: Time!
   name: String!
   startRow: Int!
   startColumn: Int!
@@ -574,6 +603,7 @@ type Header {
   dataType: String!
   isID: Boolean!
   schema: Schema!
+  foreignKeys: [Header!]
 }
 `, BuiltIn: false},
 }
@@ -954,6 +984,38 @@ func (ec *executionContext) _Header_schema(ctx context.Context, field graphql.Co
 	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Header_foreignKeys(ctx context.Context, field graphql.CollectedField, obj *models.Header) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Header",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Header().ForeignKeys(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Header)
+	fc.Result = res
+	return ec.marshalOHeader2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐHeaderᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1227,7 +1289,7 @@ func (ec *executionContext) _Organization_name(ctx context.Context, field graphq
 	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Organization_user(ctx context.Context, field graphql.CollectedField, obj *models.Organization) (ret graphql.Marshaler) {
+func (ec *executionContext) _Organization_users(ctx context.Context, field graphql.CollectedField, obj *models.Organization) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1245,7 +1307,7 @@ func (ec *executionContext) _Organization_user(ctx context.Context, field graphq
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Organization().User(rctx, obj)
+		return ec.resolvers.Organization().Users(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1257,6 +1319,38 @@ func (ec *executionContext) _Organization_user(ctx context.Context, field graphq
 	res := resTmp.([]*models.User)
 	fc.Result = res
 	return ec.marshalOUser2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Organization_resources(ctx context.Context, field graphql.CollectedField, obj *models.Organization) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().Resources(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Resource)
+	fc.Result = res
+	return ec.marshalOResource2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResourceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1714,6 +1808,41 @@ func (ec *executionContext) _Schema_id(ctx context.Context, field graphql.Collec
 	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Schema_createdAt(ctx context.Context, field graphql.CollectedField, obj *models.Schema) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Schema",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Schema_name(ctx context.Context, field graphql.CollectedField, obj *models.Schema) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1970,14 +2099,14 @@ func (ec *executionContext) _Schema_headers(ctx context.Context, field graphql.C
 		Object:     "Schema",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Headers, nil
+		return ec.resolvers.Schema().Headers(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3273,6 +3402,17 @@ func (ec *executionContext) _Header(ctx context.Context, sel ast.SelectionSet, o
 				}
 				return res
 			})
+		case "foreignKeys":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Header_foreignKeys(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3356,7 +3496,7 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "user":
+		case "users":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -3364,7 +3504,18 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Organization_user(ctx, field, obj)
+				res = ec._Organization_users(ctx, field, obj)
+				return res
+			})
+		case "resources":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_resources(ctx, field, obj)
 				return res
 			})
 		default:
@@ -3553,6 +3704,11 @@ func (ec *executionContext) _Schema(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "createdAt":
+			out.Values[i] = ec._Schema_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 			out.Values[i] = ec._Schema_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3607,7 +3763,16 @@ func (ec *executionContext) _Schema(ctx context.Context, sel ast.SelectionSet, o
 				return res
 			})
 		case "headers":
-			out.Values[i] = ec._Schema_headers(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Schema_headers(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
