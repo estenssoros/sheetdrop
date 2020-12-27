@@ -66,7 +66,7 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 
 	schema.SourceURI = input.FileName
 
-	var processor = func() error { return nil }
+	var processor = func() (*process.Result, error) { return nil, nil }
 	data, err := ioutil.ReadAll(input.File)
 	if err != nil {
 		return nil, errors.Wrap(err, "ioutil.ReadAll")
@@ -74,17 +74,18 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 
 	switch *input.Extension {
 	case constants.ExtensionExcel:
-		processor = func() error {
+		processor = func() (*process.Result, error) {
 			return process.Excel(schema, data)
 		}
 	case constants.ExtensionCSV:
-		processor = func() error {
+		processor = func() (*process.Result, error) {
 			return process.CSV(schema, data)
 		}
 	default:
 		return nil, errors.Wrap(common.ErrUnknownExtension, *input.Extension)
 	}
-	if err := processor(); err != nil {
+	result, err := processor()
+	if err != nil {
 		return nil, errors.Wrap(err, *input.Extension)
 	}
 
@@ -93,7 +94,7 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 		return nil, errors.Wrap(err, "GetSchemaHeadersSet")
 	}
 	{
-		headers := headerSet.ToCreate(schema.Headers)
+		headers := headerSet.ToCreate(result.Headers)
 		if len(headers) > 0 {
 			if err := c.Create(headers).Error; err != nil {
 				return nil, errors.Wrap(err, "createHeaders")
@@ -101,7 +102,7 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 		}
 	}
 	{
-		headers := headerSet.ToUpdate(schema.Headers)
+		headers := headerSet.ToUpdate(result.Headers)
 		if len(headers) > 0 {
 			if err := c.Save(headers).Error; err != nil {
 				return nil, errors.Wrap(err, "createHeaders")
@@ -109,7 +110,7 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 		}
 	}
 	{
-		headers := headerSet.ToDelete(schema.Headers)
+		headers := headerSet.ToDelete(result.Headers)
 		if len(headers) > 0 {
 			if err := c.Delete(headers).Error; err != nil {
 				return nil, errors.Wrap(err, "createHeaders")
@@ -119,6 +120,9 @@ func (c *Controller) ProcessFile(input *ProcessFileInput) (schema *models.Schema
 
 	if err := c.Save(schema).Error; err != nil {
 		return nil, errors.Wrap(err, "save schema")
+	}
+	if err := c.Save(result.Headers).Error; err != nil {
+		return nil, errors.Wrap(err, "save headers")
 	}
 	return schema, nil
 }

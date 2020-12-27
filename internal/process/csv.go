@@ -15,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func CSV(schema *models.Schema, data []byte) error {
+func CSV(schema *models.Schema, data []byte) (*Result, error) {
 	logrus.Info("processing csv")
 	r := csv.NewReader(bytes.NewReader(data))
 	headers := []*models.Header{}
@@ -27,12 +27,12 @@ func CSV(schema *models.Schema, data []byte) error {
 			break
 		}
 		if err != nil {
-			return errors.Wrap(err, "reader.Read")
+			return nil, errors.Wrap(err, "reader.Read")
 		}
 		if len(headers) == 0 {
 			hs, err := csvHeaders(row)
 			if err != nil {
-				return errors.Wrap(err, "csvHeaders")
+				return nil, errors.Wrap(err, "csvHeaders")
 			}
 			headers = hs
 			continue
@@ -44,15 +44,17 @@ func CSV(schema *models.Schema, data []byte) error {
 		}
 	}
 	if err := csvDataTypes(rows, headers); err != nil {
-		return errors.Wrap(err, "csvDataTypes")
+		return nil, errors.Wrap(err, "csvDataTypes")
 	}
 
 	schema.StartRow = 1
 	schema.StartColumn = 1
-	schema.Headers = headers
 	schema.SourceType = constants.SourceTypeCSV
 
-	return nil
+	return &Result{
+		Schema:  schema,
+		Headers: headers,
+	}, nil
 }
 
 func csvHeaders(row []string) ([]*models.Header, error) {

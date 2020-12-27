@@ -19,6 +19,7 @@ func TestExcel(t *testing.T) {
 		t.Fatal(err)
 	}
 	schema := &models.Schema{}
-	assert.Nil(t, Excel(schema, data))
+	_, err = Excel(schema, data)
+	assert.Nil(t, err)
 	fmt.Println(schema)
 }

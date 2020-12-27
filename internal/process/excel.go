@@ -11,46 +11,49 @@ import (
 )
 
 // Excel processes an excel row into a schema
-func Excel(schema *models.Schema, data []byte) error {
+func Excel(schema *models.Schema, data []byte) (*Result, error) {
 	logrus.Info("processing excel")
 	xlFile, err := xlsx.OpenBinaryWithRowLimit(data, constants.InitialRowLimit)
 	if err != nil {
-		return errors.Wrap(err, "xlsx.OpenBinary")
+		return nil, errors.Wrap(err, "xlsx.OpenBinary")
 	}
 
 	if len(xlFile.Sheets) < 1 {
-		return errors.New("no sheets")
+		return nil, errors.New("no sheets")
 	}
-	if err := excelSheet(schema, xlFile.Sheets[0]); err != nil {
-		return errors.Wrap(err, "excelSheet")
+	result, err := excelSheet(schema, xlFile.Sheets[0])
+	if err != nil {
+		return nil, errors.Wrap(err, "excelSheet")
 	}
-	return nil
+	return result, nil
 }
 
-func excelSheet(schema *models.Schema, sheet *xlsx.Sheet) error {
+func excelSheet(schema *models.Schema, sheet *xlsx.Sheet) (*Result, error) {
 	if !sheetHasData(sheet) {
-		return errors.New("no data")
+		return nil, errors.New("no data")
 	}
 	startRow, err := sheetStartRow(sheet)
 	if err != nil {
-		return errors.Wrap(err, "sheetStartRow")
+		return nil, errors.Wrap(err, "sheetStartRow")
 	}
 	startColumn, err := sheetStartColumn(sheet, startRow)
 	if err != nil {
-		return errors.Wrap(err, "sheetStartColumn")
+		return nil, errors.Wrap(err, "sheetStartColumn")
 	}
 	headers, err := sheetHeaders(sheet, startRow, startColumn)
 	if err != nil {
-		return errors.Wrap(err, "sheetHeader")
+		return nil, errors.Wrap(err, "sheetHeader")
 	}
 	if err := sheetDataTypes(sheet, startRow, headers); err != nil {
-		return errors.Wrap(err, "sheetDataTypes")
+		return nil, errors.Wrap(err, "sheetDataTypes")
 	}
 	schema.StartRow = startRow
 	schema.StartColumn = startColumn
-	schema.Headers = headers
 	schema.SourceType = constants.SourceTypeExcel
-	return nil
+	return &Result{
+		Schema:  schema,
+		Headers: headers,
+	}, nil
 }
 
 func sheetHasData(sheet *xlsx.Sheet) bool {

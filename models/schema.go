@@ -34,7 +34,6 @@ type Schema struct {
 	SourceType  string `gorm:"type:varchar(10)"`
 	SourceURI   string
 	UUID        uuid.UUID `gorm:"type:varchar(36);unique"`
-	Headers     []*Header
 }
 
 func (s *Schema) BeforeCreate(tx *gorm.DB) error {
