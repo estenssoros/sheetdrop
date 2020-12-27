@@ -14,8 +14,16 @@ func (r *headerResolver) Schema(ctx context.Context, obj *models.Header) (*model
 	return r.SchemaByID(obj.SchemaID)
 }
 
-func (r *organizationResolver) User(ctx context.Context, obj *models.Organization) ([]*models.User, error) {
-	return r.OrganizationUsers(obj)
+func (r *headerResolver) ForeignKeys(ctx context.Context, obj *models.Header) ([]*models.Header, error) {
+	return r.HeaderForeignKeys(obj.ID)
+}
+
+func (r *organizationResolver) Users(ctx context.Context, obj *models.Organization) ([]*models.User, error) {
+	return r.OrganizationUsers(obj.ID)
+}
+
+func (r *organizationResolver) Resources(ctx context.Context, obj *models.Organization) ([]*models.Resource, error) {
+	return r.OrganizationResources(obj.ID)
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
@@ -56,6 +64,10 @@ func (r *schemaResolver) UUID(ctx context.Context, obj *models.Schema) (string, 
 
 func (r *schemaResolver) Resource(ctx context.Context, obj *models.Schema) (*models.Resource, error) {
 	return r.ResourceByID(obj.ResourceID)
+}
+
+func (r *schemaResolver) Headers(ctx context.Context, obj *models.Schema) ([]*models.Header, error) {
+	return r.SchemaHeaders(obj.ID)
 }
 
 func (r *userResolver) Organizations(ctx context.Context, obj *models.User) ([]*models.Organization, error) {
