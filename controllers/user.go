@@ -50,3 +50,20 @@ func (c *Controller) GetUserOrgsResponse(user *models.User) ([]*models.Organizat
 func (c *Controller) DeleteUserByID(id int) error {
 	return c.Where("id=?", id).Delete(&models.User{}).Error
 }
+
+// UsersByIds finds users by ids
+func (c *Controller) UsersByIds(ids []int) ([]*models.User, []error) {
+	values := []*models.User{}
+	if err := c.Where("id in (?)", ids).Find(&values).Error; err != nil {
+		return nil, []error{errors.Wrap(err, "find values")}
+	}
+	lookup := map[int]*models.User{}
+	for _, value := range values {
+		lookup[value.ID] = value
+	}
+	out := make([]*models.User, len(ids))
+	for i, id := range ids {
+		out[i] = lookup[id]
+	}
+	return out, nil
+}

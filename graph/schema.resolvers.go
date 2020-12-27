@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 
+	"github.com/estenssoros/sheetdrop/graph/dataloader"
 	"github.com/estenssoros/sheetdrop/graph/generated"
 	"github.com/estenssoros/sheetdrop/models"
 )
@@ -67,7 +68,7 @@ func (r *schemaResolver) Resource(ctx context.Context, obj *models.Schema) (*mod
 }
 
 func (r *schemaResolver) Headers(ctx context.Context, obj *models.Schema) ([]*models.Header, error) {
-	return r.SchemaHeaders(obj.ID)
+	return dataloader.For(ctx).SchemaHeadersBySchemaID.Load(obj.ID)
 }
 
 func (r *userResolver) Organizations(ctx context.Context, obj *models.User) ([]*models.Organization, error) {

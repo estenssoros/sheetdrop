@@ -112,3 +112,20 @@ func (c *Controller) ListSchemas() ([]*models.Schema, error) {
 	m := []*models.Schema{}
 	return m, c.Find(&m).Error
 }
+
+// SchemasByIDs group querys for finding schema by ids
+func (c *Controller) SchemasByIDs(ids []int) ([]*models.Schema, []error) {
+	values := []*models.Schema{}
+	if err := c.Where("id in (?)", ids).Find(&values).Error; err != nil {
+		return nil, []error{errors.Wrap(err, "find values")}
+	}
+	lookup := map[int]*models.Schema{}
+	for _, value := range values {
+		lookup[value.ID] = value
+	}
+	out := make([]*models.Schema, len(ids))
+	for i, id := range ids {
+		out[i] = lookup[id]
+	}
+	return out, nil
+}
