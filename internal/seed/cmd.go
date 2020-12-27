@@ -64,7 +64,37 @@ func schemaSeeds() []interface{} {
 
 func headerSeeds() []interface{} {
 	return []interface{}{
-		&models.Header{},
+		&models.Header{
+			SchemaID: 1,
+			Name:     "id",
+			Index:    0,
+			DataType: models.DataTypeInt,
+			IsID:     true,
+		},
+		&models.Header{
+			SchemaID: 1,
+			Name:     "name",
+			Index:    1,
+			DataType: models.DataTypeString,
+		},
+		&models.Header{
+			SchemaID: 1,
+			Name:     "imo",
+			Index:    2,
+			DataType: models.DataTypeInt,
+		},
+		&models.Header{
+			SchemaID: 1,
+			Name:     "builder",
+			Index:    3,
+			DataType: models.DataTypeString,
+		},
+		&models.Header{
+			SchemaID: 1,
+			Name:     "built",
+			Index:    3,
+			DataType: models.DataTypeInt,
+		},
 	}
 }
 
