@@ -23,7 +23,8 @@ type Organization {
   id: ID!
   createdAt: Time!
   name: String!
-  user: [User!]
+  users: [User!]
+  resources: [Resource!]
 }
 
 scalar UUID
@@ -38,6 +39,7 @@ type Resource {
 
 type Schema {
   id: ID!
+  createdAt: Time!
   name: String!
   startRow: Int!
   startColumn: Int!
@@ -55,4 +57,5 @@ type Header {
   dataType: String!
   isID: Boolean!
   schema: Schema!
+  foreignKeys: [Header!]
 }
