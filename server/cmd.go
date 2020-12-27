@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/estenssoros/sheetdrop/controllers"
+	"github.com/estenssoros/sheetdrop/graph/dataloader"
 	"github.com/estenssoros/sheetdrop/orm"
 	"github.com/estenssoros/sheetdrop/server/middle"
 	"github.com/labstack/echo/v4"
@@ -28,10 +29,11 @@ func run() error {
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
+
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
-
 	e.Use(middle.CTLInjector(ctl))
+	e.Use(dataloader.Middleware(ctl))
 
 	{
 		graph := e.Group("/graph")
