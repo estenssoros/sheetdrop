@@ -4,6 +4,7 @@ package models
 var Models = []interface{}{
 	&Resource{},
 	&Header{},
+	&HeaderHeader{},
 	&Schema{},
 	&User{},
 	&Organization{},

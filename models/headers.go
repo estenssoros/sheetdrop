@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+type HeaderHeader struct {
+	ID              int
+	HeaderID        int
+	ForeignHeaderID int
+}
+
+func (h HeaderHeader) TableName() string {
+	return `header_header`
+}
+
 // Header field information from a data source
 type Header struct {
 	ID        int `gorm:"primarykey"`
