@@ -67,7 +67,7 @@ func openConnection(conn connector) (*gorm.DB, error) {
 		return nil, errors.Wrap(err, "db.DB")
 	}
 	sqlDB.SetMaxIdleConns(1)
-	sqlDB.SetMaxOpenConns(1)
+	sqlDB.SetMaxOpenConns(10)
 	return db, nil
 }
 
