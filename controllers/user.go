@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ListUsers lists all users
 func (c *Controller) ListUsers() ([]*models.User, error) {
 	users := []*models.User{}
 	return users, c.Find(&users).Error
@@ -40,10 +41,12 @@ func (c *Controller) UserOrganizations(obj *models.User) ([]*models.Organization
 
 var errNotImplemented = errors.New("not implemented")
 
+// GetUserOrgsResponse gets the user orgs response
 func (c *Controller) GetUserOrgsResponse(user *models.User) ([]*models.Organization, error) {
 	return nil, errNotImplemented
 }
 
+// DeleteUserByID deletes a user by id
 func (c *Controller) DeleteUserByID(id int) error {
 	return c.Where("id=?", id).Delete(&models.User{}).Error
 }

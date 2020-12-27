@@ -49,6 +49,7 @@ func (c *Controller) CreateSchemaForResource(resource *models.Resource) (*models
 	return schema, c.Create(schema).Error
 }
 
+// ListResources lists resources
 func (c *Controller) ListResources() ([]*models.Resource, error) {
 	m := []*models.Resource{}
 	return m, c.Find(&m).Error

@@ -63,20 +63,20 @@ func (c *Controller) OrganizationByID(id int) (*models.Organization, error) {
 }
 
 // OrganizationUsers get users for an organization
-func (c *Controller) OrganizationUsers(obj *models.Organization) ([]*models.User, error) {
+func (c *Controller) OrganizationUsers(orgID int) ([]*models.User, error) {
 	users := []*models.User{}
 	return users, c.
 		Joins("JOIN organization_user ON organization_user.user_id = users.id").
-		Where("organization_user.organization_id=?", obj.ID).Find(&users).Error
+		Where("organization_user.organization_id=?", orgID).Find(&users).Error
 }
 
-func (c *Controller) CreateOrgByName(orgName string) (*models.Organization, error) {
-	org := &models.Organization{
-		Name: helpers.StringPtr(orgName),
-	}
-	return org, c.Create(org).Error
+// OrganizationResources gets resources for an organization
+func (c *Controller) OrganizationResources(orgID int) ([]*models.Resource, error) {
+	resources := []*models.Resource{}
+	return resources, c.Where("organization_id=?", orgID).Find(&resources).Error
 }
 
+// UserHasOrg checks to see if a user has an org
 func (c *Controller) UserHasOrg(userID int, orgName string) (bool, error) {
 	var count int64
 	query := c.Model(&models.OrganizationUser{}).
@@ -85,6 +85,7 @@ func (c *Controller) UserHasOrg(userID int, orgName string) (bool, error) {
 	return count > 0, query.Count(&count).Error
 }
 
+// CreateOrgWithName creates an org with a given name
 func (c *Controller) CreateOrgWithName(orgName string) (*models.Organization, error) {
 	org := &models.Organization{
 		Name: helpers.StringPtr(orgName),
@@ -92,6 +93,7 @@ func (c *Controller) CreateOrgWithName(orgName string) (*models.Organization, er
 	return org, c.Create(org).Error
 }
 
+// CreateOrgUser creates an org-user relationship
 func (c *Controller) CreateOrgUser(orgID, userID int) (*models.OrganizationUser, error) {
 	orgUser := &models.OrganizationUser{
 		OrganizationID: orgID,
@@ -100,6 +102,7 @@ func (c *Controller) CreateOrgUser(orgID, userID int) (*models.OrganizationUser,
 	return orgUser, c.Create(orgUser).Error
 }
 
+// ListOrganizations lists the organizations
 func (c *Controller) ListOrganizations() ([]*models.Organization, error) {
 	m := []*models.Organization{}
 	return m, c.Find(&m).Error
