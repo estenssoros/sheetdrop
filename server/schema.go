@@ -32,9 +32,10 @@ func getSchemaHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	if len(schemas) > 0 {
-		if err := ctl(c).SchemaRelations(schemas); err != nil {
-			return c.JSON(http.StatusInternalServerError, err)
-		}
+		// TODO: schema relations response
+		// if err := ctl(c).SchemaRelations(schemas); err != nil {
+		// 	return c.JSON(http.StatusInternalServerError, err)
+		// }
 		return c.JSON(http.StatusOK, schemas)
 	}
 	schema, err := ctl(c).CreateSchemaForResource(&models.Resource{
