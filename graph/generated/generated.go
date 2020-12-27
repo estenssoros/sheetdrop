@@ -1492,6 +1492,38 @@ func (ec *executionContext) _Header_schema(ctx context.Context, field graphql.Co
 	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Header_foreignKeys(ctx context.Context, field graphql.CollectedField, obj *models.Header) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Header",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Header().ForeignKeys(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Header)
+	fc.Result = res
+	return ec.marshalOHeader2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐHeaderᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_getUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2119,39 +2151,7 @@ func (ec *executionContext) _Mutation_deleteSchema(ctx context.Context, field gr
 	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Header_foreignKeys(ctx context.Context, field graphql.CollectedField, obj *models.Header) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Header",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Header().ForeignKeys(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*models.Header)
-	fc.Result = res
-	return ec.marshalOHeader2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐHeaderᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_createSchema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
