@@ -102,3 +102,20 @@ func (c *Controller) ListOrganizations() ([]*models.Organization, error) {
 	m := []*models.Organization{}
 	return m, c.Find(&m).Error
 }
+
+// OrganizationsByIDs group queries for finding organization by id
+func (c *Controller) OrganizationsByIDs(ids []int) ([]*models.Organization, []error) {
+	values := []*models.Organization{}
+	if err := c.Where("id in (?)", ids).Find(&values).Error; err != nil {
+		return nil, []error{errors.Wrap(err, "find values")}
+	}
+	lookup := map[int]*models.Organization{}
+	for _, value := range values {
+		lookup[value.ID] = value
+	}
+	out := make([]*models.Organization, len(ids))
+	for i, id := range ids {
+		out[i] = lookup[id]
+	}
+	return out, nil
+}
