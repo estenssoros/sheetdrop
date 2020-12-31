@@ -72,7 +72,7 @@ func (r *schemaResolver) Headers(ctx context.Context, obj *models.Schema) ([]*mo
 }
 
 func (r *userResolver) Organizations(ctx context.Context, obj *models.User) ([]*models.Organization, error) {
-	return r.UserOrganizations(obj)
+	return r.UserOrganizations(obj.ID)
 }
 
 // Header returns generated.HeaderResolver implementation.

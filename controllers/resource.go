@@ -5,10 +5,10 @@ import (
 )
 
 // UserResources gets a user's resources
-func (c *Controller) UserResources(user *models.User) ([]*models.Resource, error) {
+func (c *Controller) UserResources(userID int) ([]*models.Resource, error) {
 	m := []*models.Resource{}
 	return m, c.
-		Where("owner_id=?", user.ID).
+		Where("owner_id=?", userID).
 		Find(&m).Error
 }
 
@@ -27,18 +27,18 @@ func (c *Controller) ResourceByID(id int) (*models.Resource, error) {
 }
 
 // UserFromResourceID gets a resource's user
-func (c *Controller) UserFromResourceID(id int) (*models.User, error) {
-	m := &models.User{}
+func (c *Controller) UsersFromResourceID(id int) ([]*models.User, error) {
+	m := []*models.User{}
 	return m, c.
 		Joins("JOIN resources ON resources.owner_id = users.id").
 		Where("resources.id=?", id).
-		First(m).Error
+		Find(&m).Error
 }
 
 // ResourceSchemas gets schemas for an resource
-func (c *Controller) ResourceSchemas(obj *models.Resource) ([]*models.Schema, error) {
+func (c *Controller) ResourceSchemas(resourceID int) ([]*models.Schema, error) {
 	m := []*models.Schema{}
-	return m, c.Where("resource_id=?", obj.ID).Find(&m).Error
+	return m, c.Where("resource_id=?", resourceID).Find(&m).Error
 }
 
 // CreateSchemaForResource creates a schema for an resource

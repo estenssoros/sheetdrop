@@ -30,11 +30,11 @@ func (c *Controller) GetUserByID(userID int) (*models.User, error) {
 }
 
 // UserOrganizations gets a user's organizations
-func (c *Controller) UserOrganizations(obj *models.User) ([]*models.Organization, error) {
+func (c *Controller) UserOrganizations(userID int) ([]*models.Organization, error) {
 	m := []*models.Organization{}
 	return m, c.
 		Joins("JOIN organization_user ON organization_user.organization_id=organization.id").
-		Where("organization_user.user_id=?", obj.ID).
+		Where("organization_user.user_id=?", userID).
 		Find(&m).
 		Error
 }

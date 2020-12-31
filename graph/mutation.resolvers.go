@@ -29,7 +29,8 @@ func (r *mutationResolver) GetOrg(ctx context.Context, id int) (*models.Organiza
 }
 
 func (r *mutationResolver) CreateOrg(ctx context.Context, userID int, orgName string) (*models.Organization, error) {
-	hasOrg, err := r.UserHasOrg(userID, orgName)
+	// TODO: input needs to be orgID
+	hasOrg, err := r.UserHasOrg(userID, 1)
 	if err != nil {
 		return nil, fmt.Errorf("r.UserHasOrg:%v", err)
 	}

@@ -42,18 +42,13 @@ func (c *Controller) CreateOrg(input *CreateOrgInput) error {
 }
 
 // UserCanEditOrg can a user edit an org
-func (c *Controller) UserCanEditOrg(user *models.User, org *models.Organization) (bool, error) {
+func (c *Controller) UserCanEditOrg(userID, orgID int) (bool, error) {
 	var count int64
 	err := c.Model(&models.OrganizationUser{}).
-		Where("user_id=?", user.ID).
-		Where("organization_id=?", org.ID).
+		Where("user_id=?", userID).
+		Where("organization_id=?", orgID).
 		Count(&count).Error
 	return count > 0, err
-}
-
-// UpdateOrg saves an org
-func (c *Controller) UpdateOrg(org *models.Organization) error {
-	return c.Save(org).Error
 }
 
 // OrganizationByID gets organization by id
@@ -77,11 +72,11 @@ func (c *Controller) OrganizationResources(orgID int) ([]*models.Resource, error
 }
 
 // UserHasOrg checks to see if a user has an org
-func (c *Controller) UserHasOrg(userID int, orgName string) (bool, error) {
+func (c *Controller) UserHasOrg(userID, orgID int) (bool, error) {
 	var count int64
 	query := c.Model(&models.OrganizationUser{}).
 		Joins("JOIN organization ON organization.id = organization_user.organization_id").
-		Where("organization.name = ?", orgName)
+		Where("organization.id = ?", orgID)
 	return count > 0, query.Count(&count).Error
 }
 

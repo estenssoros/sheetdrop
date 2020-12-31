@@ -20,13 +20,14 @@ func getSchemaHandler(c echo.Context) error {
 	if id == 0 {
 		return c.JSON(http.StatusBadRequest, "no id sent")
 	}
-	user, err := ctl(c).UserFromResourceID(id)
+	_, err = ctl(c).UsersFromResourceID(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	if user.UserName != usr(c) {
-		return c.JSON(http.StatusForbidden, "user names do not match")
-	}
+	// TODO: check that user has access to resource
+	// if user.UserName != usr(c) {
+	// 	return c.JSON(http.StatusForbidden, "user names do not match")
+	// }
 	schemas, err := ctl(c).SchemasForResource(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())

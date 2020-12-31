@@ -52,13 +52,13 @@ func (c *Controller) UpdateSchema(input *UpdateSchemaInput) (*models.Schema, err
 }
 
 // UserFromSchemaID get a user from a schema
-func (c *Controller) UserFromSchemaID(schemaID int) (*models.User, error) {
-	user := &models.User{}
-	return user, c.Model(user).
+func (c *Controller) UsersFromSchemaID(schemaID int) ([]*models.User, error) {
+	users := []*models.User{}
+	return users, c.Model(&models.User{}).
 		Joins("JOIN resources ON resources.owner_id = users.id").
-		Joins("JOIN schema ON schema.resource_id = resources.id").
+		Joins("JOIN schemas ON schemas.resource_id = resources.id").
 		Where("schemas.id=?", schemaID).
-		First(user).Error
+		Find(&users).Error
 }
 
 // DeleteSchema deletes a schema
