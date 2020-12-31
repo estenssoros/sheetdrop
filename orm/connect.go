@@ -74,7 +74,7 @@ func openConnection(conn connector) (*gorm.DB, error) {
 // Connect connect to a database by name
 func Connect() (*gorm.DB, error) {
 	if err := godotenv.Load(); err != nil {
-		return nil, errors.Wrap(err, "godotenv.Load")
+		logrus.Warning("could not find .env")
 	}
 	config := &Config{
 		Dialect:  os.Getenv(constants.EnvDatabaseDialect),
