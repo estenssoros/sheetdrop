@@ -6,6 +6,5 @@ go install
 sheetdrop db migrate -d
 sheetdrop seed
 
-cd controllers
-go test -v ./... -coverprofile=cover.out
+go test -v ./controllers -coverprofile=cover.out
 go tool cover -html=cover.out
