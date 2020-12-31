@@ -26,7 +26,7 @@ func (c *Controller) ResourceByID(id int) (*models.Resource, error) {
 		First(m).Error
 }
 
-// UserFromResourceID gets a resource's user
+// UsersFromResourceID gets a resource's user
 func (c *Controller) UsersFromResourceID(id int) ([]*models.User, error) {
 	m := []*models.User{}
 	return m, c.

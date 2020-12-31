@@ -31,6 +31,7 @@ func (c *Controller) HeadersByIDs(ids []int) ([]*models.Header, []error) {
 	return out, nil
 }
 
+// HeadersBySchemaIDs group queries for finding headers for schemas
 func (c *Controller) HeadersBySchemaIDs(schemaIds []int) ([][]*models.Header, []error) {
 	values := []*models.Header{}
 	if err := c.Where("schema_id in (?)", schemaIds).Find(&values).Error; err != nil {

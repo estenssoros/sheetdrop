@@ -51,7 +51,7 @@ func (c *Controller) UpdateSchema(input *UpdateSchemaInput) (*models.Schema, err
 	return schema, c.Save(schema).Error
 }
 
-// UserFromSchemaID get a user from a schema
+// UsersFromSchemaID get users from a schema
 func (c *Controller) UsersFromSchemaID(schemaID int) ([]*models.User, error) {
 	users := []*models.User{}
 	return users, c.Model(&models.User{}).
@@ -113,7 +113,7 @@ func (c *Controller) ListSchemas() ([]*models.Schema, error) {
 	return m, c.Find(&m).Error
 }
 
-// SchemasByIDs group querys for finding schema by ids
+// SchemasByIDs group queries for finding schema by ids
 func (c *Controller) SchemasByIDs(ids []int) ([]*models.Schema, []error) {
 	values := []*models.Schema{}
 	if err := c.Where("id in (?)", ids).Find(&values).Error; err != nil {
