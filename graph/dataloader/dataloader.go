@@ -11,18 +11,21 @@ import (
 
 const loadersKey = "dataloaders"
 
+// Loaders wrapper for all data loaders
 type Loaders struct {
-	UserById                UserLoader
+	UserByID                UserLoader
 	HeaderByID              HeaderLoader
 	SchemaHeadersBySchemaID SchemaHeaderLoader
 	SchemaByID              SchemaLoader
+	OrganizationByID        OrganizationLoader
 }
 
+// Middleware injects dataloaders onto context
 func Middleware(ctl *controllers.Controller) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			ctx := context.WithValue(context.Background(), loadersKey, &Loaders{
-				UserById: UserLoader{
+				UserByID: UserLoader{
 					maxBatch: 100,
 					wait:     1 * time.Millisecond,
 					fetch: func(ids []int) ([]*models.User, []error) {
@@ -50,6 +53,13 @@ func Middleware(ctl *controllers.Controller) echo.MiddlewareFunc {
 						return ctl.SchemasByIDs(ids)
 					},
 				},
+				OrganizationByID: OrganizationLoader{
+					maxBatch: 100,
+					wait:     1 * time.Millisecond,
+					fetch: func(ids []int) ([]*models.Organization, []error) {
+						return ctl.OrganizationsByIDs(ids)
+					},
+				},
 			})
 			c.SetRequest(c.Request().WithContext(ctx))
 			return next(c)
@@ -57,6 +67,7 @@ func Middleware(ctl *controllers.Controller) echo.MiddlewareFunc {
 	}
 }
 
+// For retrieves dataloaders from context
 func For(ctx context.Context) *Loaders {
 	return ctx.Value(loadersKey).(*Loaders)
 }
