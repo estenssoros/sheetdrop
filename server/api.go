@@ -14,13 +14,14 @@ func getResourceHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	user, err := ctl(c).UserFromResourceID(id)
+	_, err = ctl(c).UsersFromResourceID(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	if user.UserName != usr(c) {
-		return c.JSON(http.StatusForbidden, "user names do not match")
-	}
+	// TODO: create func to user has resource
+	// if user.UserName != usr(c) {
+	// 	return c.JSON(http.StatusForbidden, "user names do not match")
+	// }
 	resource, err := ctl(c).ResourceByID(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
@@ -44,9 +45,7 @@ func (req *createResourceRequest) Validate(c echo.Context) (*models.Resource, er
 	if err != nil {
 		return nil, errors.Wrap(err, "GetUserByName")
 	}
-	hasOrg, err := ctl(c).UserCanEditOrg(user, &models.Organization{
-		ID: *req.OrganizationID,
-	})
+	hasOrg, err := ctl(c).UserCanEditOrg(user.ID, *req.OrganizationID)
 	if err != nil {
 		return nil, errors.Wrap(err, "UserHasOrg")
 	}
@@ -148,7 +147,7 @@ func getResourcesHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	resources, err := ctl(c).UserResources(user)
+	resources, err := ctl(c).UserResources(user.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
