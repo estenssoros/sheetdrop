@@ -12,7 +12,7 @@ import (
 )
 
 func (r *headerResolver) Schema(ctx context.Context, obj *models.Header) (*models.Schema, error) {
-	return r.SchemaByID(obj.SchemaID)
+	return dataloader.For(ctx).SchemaByID.Load(obj.ID)
 }
 
 func (r *headerResolver) ForeignKeys(ctx context.Context, obj *models.Header) ([]*models.Header, error) {
@@ -48,7 +48,7 @@ func (r *queryResolver) Schemas(ctx context.Context, resourceID int) ([]*models.
 }
 
 func (r *resourceResolver) Organization(ctx context.Context, obj *models.Resource) (*models.Organization, error) {
-	return r.OrganizationByID(obj.OrganizationID)
+	return dataloader.For(ctx).OrganizationByID.Load(obj.OrganizationID)
 }
 
 func (r *resourceResolver) AuthToken(ctx context.Context, obj *models.Resource) (string, error) {
