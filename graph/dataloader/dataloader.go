@@ -18,6 +18,7 @@ type Loaders struct {
 	SchemaHeadersBySchemaID SchemaHeaderLoader
 	SchemaByID              SchemaLoader
 	OrganizationByID        OrganizationLoader
+	ResourceSchemaCountByID ResourceSchemaCount
 }
 
 // Middleware injects dataloaders onto context
@@ -58,6 +59,13 @@ func Middleware(ctl *controllers.Controller) echo.MiddlewareFunc {
 					wait:     1 * time.Millisecond,
 					fetch: func(ids []int) ([]*models.Organization, []error) {
 						return ctl.OrganizationsByIDs(ids)
+					},
+				},
+				ResourceSchemaCountByID: ResourceSchemaCount{
+					maxBatch: 100,
+					wait:     1 * time.Millisecond,
+					fetch: func(ids []int) ([]int, []error) {
+						return ctl.ResourceSchemaCountByID(ids)
 					},
 				},
 			})
