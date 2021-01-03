@@ -5,9 +5,12 @@
 type Query {
   users: [User!]
   organizations: [Organization!]
-  resources: [Resource!]
+  organization(id: ID!): Organization!
   resource(id: ID!): Resource!
+  resources(organizationID: ID!): [Resource!]
   schemas(resourceID: ID!): [Schema!]
+  schema(id: ID!): Schema!
+  headers(schemaID: ID!): [Header!]
 }
 
 scalar Time
@@ -31,9 +34,11 @@ scalar UUID
 
 type Resource {
   id: ID!
+  createdAt: Time!
   organization: Organization!
   name: String!
   authToken: UUID!
+  schemaCount: Int!
   schemas: [Schema!]
 }
 

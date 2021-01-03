@@ -35,16 +35,28 @@ func (r *queryResolver) Organizations(ctx context.Context) ([]*models.Organizati
 	return r.ListOrganizations()
 }
 
-func (r *queryResolver) Resources(ctx context.Context) ([]*models.Resource, error) {
-	return r.ListResources()
+func (r *queryResolver) Organization(ctx context.Context, id int) (*models.Organization, error) {
+	return dataloader.For(ctx).OrganizationByID.Load(id)
 }
 
 func (r *queryResolver) Resource(ctx context.Context, id int) (*models.Resource, error) {
 	return r.ResourceByID(id)
 }
 
+func (r *queryResolver) Resources(ctx context.Context, organizationID int) ([]*models.Resource, error) {
+	return r.OrganizationResources(organizationID)
+}
+
 func (r *queryResolver) Schemas(ctx context.Context, resourceID int) ([]*models.Schema, error) {
 	return r.ListSchemas()
+}
+
+func (r *queryResolver) Schema(ctx context.Context, id int) (*models.Schema, error) {
+	return dataloader.For(ctx).SchemaByID.Load(id)
+}
+
+func (r *queryResolver) Headers(ctx context.Context, schemaID int) ([]*models.Header, error) {
+	return r.SchemaHeaders(schemaID)
 }
 
 func (r *resourceResolver) Organization(ctx context.Context, obj *models.Resource) (*models.Organization, error) {
@@ -53,6 +65,10 @@ func (r *resourceResolver) Organization(ctx context.Context, obj *models.Resourc
 
 func (r *resourceResolver) AuthToken(ctx context.Context, obj *models.Resource) (string, error) {
 	return obj.AuthToken.String(), nil
+}
+
+func (r *resourceResolver) SchemaCount(ctx context.Context, obj *models.Resource) (int, error) {
+	return dataloader.For(ctx).ResourceSchemaCountByID.Load(obj.ID)
 }
 
 func (r *resourceResolver) Schemas(ctx context.Context, obj *models.Resource) ([]*models.Schema, error) {
