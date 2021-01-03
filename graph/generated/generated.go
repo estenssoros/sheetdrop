@@ -90,18 +90,23 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Headers       func(childComplexity int, schemaID int) int
+		Organization  func(childComplexity int, id int) int
 		Organizations func(childComplexity int) int
 		Resource      func(childComplexity int, id int) int
-		Resources     func(childComplexity int) int
+		Resources     func(childComplexity int, organizationID int) int
+		Schema        func(childComplexity int, id int) int
 		Schemas       func(childComplexity int, resourceID int) int
 		Users         func(childComplexity int) int
 	}
 
 	Resource struct {
 		AuthToken    func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Name         func(childComplexity int) int
 		Organization func(childComplexity int) int
+		SchemaCount  func(childComplexity int) int
 		Schemas      func(childComplexity int) int
 	}
 
@@ -158,14 +163,18 @@ type OrganizationResolver interface {
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*models.User, error)
 	Organizations(ctx context.Context) ([]*models.Organization, error)
-	Resources(ctx context.Context) ([]*models.Resource, error)
+	Organization(ctx context.Context, id int) (*models.Organization, error)
 	Resource(ctx context.Context, id int) (*models.Resource, error)
+	Resources(ctx context.Context, organizationID int) ([]*models.Resource, error)
 	Schemas(ctx context.Context, resourceID int) ([]*models.Schema, error)
+	Schema(ctx context.Context, id int) (*models.Schema, error)
+	Headers(ctx context.Context, schemaID int) ([]*models.Header, error)
 }
 type ResourceResolver interface {
 	Organization(ctx context.Context, obj *models.Resource) (*models.Organization, error)
 
 	AuthToken(ctx context.Context, obj *models.Resource) (string, error)
+	SchemaCount(ctx context.Context, obj *models.Resource) (int, error)
 	Schemas(ctx context.Context, obj *models.Resource) ([]*models.Schema, error)
 }
 type SchemaResolver interface {
@@ -504,6 +513,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Users(childComplexity), true
 
+	case "Query.headers":
+		if e.complexity.Query.Headers == nil {
+			break
+		}
+
+		args, err := ec.field_Query_headers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Headers(childComplexity, args["schemaID"].(int)), true
+
+	case "Query.organization":
+		if e.complexity.Query.Organization == nil {
+			break
+		}
+
+		args, err := ec.field_Query_organization_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Organization(childComplexity, args["id"].(int)), true
+
 	case "Query.organizations":
 		if e.complexity.Query.Organizations == nil {
 			break
@@ -528,7 +561,24 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Resources(childComplexity), true
+		args, err := ec.field_Query_resources_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Resources(childComplexity, args["organizationID"].(int)), true
+
+	case "Query.schema":
+		if e.complexity.Query.Schema == nil {
+			break
+		}
+
+		args, err := ec.field_Query_schema_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Schema(childComplexity, args["id"].(int)), true
 
 	case "Query.schemas":
 		if e.complexity.Query.Schemas == nil {
@@ -556,6 +606,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Resource.AuthToken(childComplexity), true
 
+	case "Resource.createdAt":
+		if e.complexity.Resource.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Resource.CreatedAt(childComplexity), true
+
 	case "Resource.id":
 		if e.complexity.Resource.ID == nil {
 			break
@@ -576,6 +633,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Resource.Organization(childComplexity), true
+
+	case "Resource.schemaCount":
+		if e.complexity.Resource.SchemaCount == nil {
+			break
+		}
+
+		return e.complexity.Resource.SchemaCount(childComplexity), true
 
 	case "Resource.schemas":
 		if e.complexity.Resource.Schemas == nil {
@@ -780,9 +844,12 @@ type Mutation {
 type Query {
   users: [User!]
   organizations: [Organization!]
-  resources: [Resource!]
+  organization(id: ID!): Organization!
   resource(id: ID!): Resource!
+  resources(organizationID: ID!): [Resource!]
   schemas(resourceID: ID!): [Schema!]
+  schema(id: ID!): Schema!
+  headers(schemaID: ID!): [Header!]
 }
 
 scalar Time
@@ -806,9 +873,11 @@ scalar UUID
 
 type Resource {
   id: ID!
+  createdAt: Time!
   organization: Organization!
   name: String!
   authToken: UUID!
+  schemaCount: Int!
   schemas: [Schema!]
 }
 
@@ -1214,7 +1283,67 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_headers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["schemaID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("schemaID"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["schemaID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_organization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_resource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_resources_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["organizationID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationID"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_schema_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -2552,7 +2681,7 @@ func (ec *executionContext) _Query_organizations(ctx context.Context, field grap
 	return ec.marshalOOrganization2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganizationᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_resources(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_organization(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2568,20 +2697,30 @@ func (ec *executionContext) _Query_resources(ctx context.Context, field graphql.
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_organization_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Resources(rctx)
+		return ec.resolvers.Query().Organization(rctx, args["id"].(int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]*models.Resource)
+	res := resTmp.(*models.Organization)
 	fc.Result = res
-	return ec.marshalOResource2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResourceᚄ(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_resource(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2626,6 +2765,45 @@ func (ec *executionContext) _Query_resource(ctx context.Context, field graphql.C
 	return ec.marshalNResource2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResource(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_resources(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_resources_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Resources(rctx, args["organizationID"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Resource)
+	fc.Result = res
+	return ec.marshalOResource2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐResourceᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_schemas(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2663,6 +2841,87 @@ func (ec *executionContext) _Query_schemas(ctx context.Context, field graphql.Co
 	res := resTmp.([]*models.Schema)
 	fc.Result = res
 	return ec.marshalOSchema2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchemaᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_schema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_schema_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Schema(rctx, args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Schema)
+	fc.Result = res
+	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_headers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_headers_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Headers(rctx, args["schemaID"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*models.Header)
+	fc.Result = res
+	return ec.marshalOHeader2ᚕᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐHeaderᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2771,6 +3030,41 @@ func (ec *executionContext) _Resource_id(ctx context.Context, field graphql.Coll
 	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Resource_createdAt(ctx context.Context, field graphql.CollectedField, obj *models.Resource) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Resource",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Resource_organization(ctx context.Context, field graphql.CollectedField, obj *models.Resource) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2874,6 +3168,41 @@ func (ec *executionContext) _Resource_authToken(ctx context.Context, field graph
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNUUID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Resource_schemaCount(ctx context.Context, field graphql.CollectedField, obj *models.Resource) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Resource",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Resource().SchemaCount(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Resource_schemas(ctx context.Context, field graphql.CollectedField, obj *models.Resource) (ret graphql.Marshaler) {
@@ -4773,7 +5102,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_organizations(ctx, field)
 				return res
 			})
-		case "resources":
+		case "organization":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -4781,7 +5110,10 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_resources(ctx, field)
+				res = ec._Query_organization(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "resource":
@@ -4798,6 +5130,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "resources":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_resources(ctx, field)
+				return res
+			})
 		case "schemas":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -4807,6 +5150,31 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_schemas(ctx, field)
+				return res
+			})
+		case "schema":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_schema(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "headers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_headers(ctx, field)
 				return res
 			})
 		case "__type":
@@ -4840,6 +5208,11 @@ func (ec *executionContext) _Resource(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "createdAt":
+			out.Values[i] = ec._Resource_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "organization":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -4868,6 +5241,20 @@ func (ec *executionContext) _Resource(ctx context.Context, sel ast.SelectionSet,
 					}
 				}()
 				res = ec._Resource_authToken(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "schemaCount":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Resource_schemaCount(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
