@@ -53,3 +53,11 @@ func TestUsersFromSchemaID(t *testing.T) {
 	}
 	assert.NotEmpty(t, out)
 }
+
+func TestResourceSchemaCountByID(t *testing.T) {
+	out, err := ctl(t).ResourceSchemaCountByID([]int{1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.NotEmpty(t, out)
+}

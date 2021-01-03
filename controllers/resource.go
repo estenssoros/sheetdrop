@@ -54,3 +54,28 @@ func (c *Controller) ListResources() ([]*models.Resource, error) {
 	m := []*models.Resource{}
 	return m, c.Find(&m).Error
 }
+
+// ResourceSchemaCountByID batch resource schema counts
+func (c *Controller) ResourceSchemaCountByID(ids []int) ([]int, []error) {
+	var counts = []struct {
+		ID  int
+		Cnt int
+	}{}
+	err := c.Model(&models.Resource{}).
+		Select("resources.id, count(*) cnt").
+		Joins("LEFT JOIN schemas ON schemas.resource_id = resources.id").
+		Group("resources.id").Find(&counts).Error
+	if err != nil {
+		return nil, []error{err}
+	}
+	lookup := map[int]int{}
+	for _, value := range counts {
+		lookup[value.ID] = value.Cnt
+	}
+	out := make([]int, len(ids))
+	for i, id := range ids {
+		out[i] = lookup[id]
+	}
+	return out, nil
+
+}
