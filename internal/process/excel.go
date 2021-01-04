@@ -1,6 +1,9 @@
 package process
 
 import (
+	"io"
+	"io/ioutil"
+
 	"github.com/estenssoros/sheetdrop/constants"
 	"github.com/estenssoros/sheetdrop/internal/helpers"
 	"github.com/estenssoros/sheetdrop/models"
@@ -11,8 +14,12 @@ import (
 )
 
 // Excel processes an excel row into a schema
-func Excel(schema *models.Schema, data []byte) (*Result, error) {
+func Excel(schema *models.Schema, file io.Reader) (*Result, error) {
 	logrus.Info("processing excel")
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "ioutil.ReadAll")
+	}
 	xlFile, err := xlsx.OpenBinaryWithRowLimit(data, constants.InitialRowLimit)
 	if err != nil {
 		return nil, errors.Wrap(err, "xlsx.OpenBinary")
@@ -21,11 +28,7 @@ func Excel(schema *models.Schema, data []byte) (*Result, error) {
 	if len(xlFile.Sheets) < 1 {
 		return nil, errors.New("no sheets")
 	}
-	result, err := excelSheet(schema, xlFile.Sheets[0])
-	if err != nil {
-		return nil, errors.Wrap(err, "excelSheet")
-	}
-	return result, nil
+	return excelSheet(schema, xlFile.Sheets[0])
 }
 
 func excelSheet(schema *models.Schema, sheet *xlsx.Sheet) (*Result, error) {
@@ -47,12 +50,10 @@ func excelSheet(schema *models.Schema, sheet *xlsx.Sheet) (*Result, error) {
 	if err := sheetDataTypes(sheet, startRow, headers); err != nil {
 		return nil, errors.Wrap(err, "sheetDataTypes")
 	}
-	schema.StartRow = startRow
-	schema.StartColumn = startColumn
-	schema.SourceType = constants.SourceTypeExcel
 	return &Result{
-		Schema:  schema,
-		Headers: headers,
+		StartRow:    startRow,
+		StartColumn: startColumn,
+		Headers:     headers,
 	}, nil
 }
 

@@ -2,7 +2,7 @@ package process
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -14,12 +14,12 @@ import (
 func TestExcel(t *testing.T) {
 	home, _ := homedir.Dir()
 	fileName := filepath.Join(home, "Downloads", "Crew JDE Mapping.xlsx")
-	data, err := ioutil.ReadFile(fileName)
+	f, err := os.Open(fileName)
 	if err != nil {
 		t.Fatal(err)
 	}
 	schema := &models.Schema{}
-	_, err = Excel(schema, data)
+	_, err = Excel(schema, f)
 	assert.Nil(t, err)
 	fmt.Println(schema)
 }

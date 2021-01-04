@@ -1,7 +1,6 @@
 package process
 
 import (
-	"bytes"
 	"encoding/csv"
 	"io"
 	"strconv"
@@ -15,9 +14,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func CSV(schema *models.Schema, data []byte) (*Result, error) {
+func CSV(schema *models.Schema, file io.Reader) (*Result, error) {
 	logrus.Info("processing csv")
-	r := csv.NewReader(bytes.NewReader(data))
+	r := csv.NewReader(file)
 	headers := []*models.Header{}
 	rows := [][]string{}
 	var count int
@@ -47,13 +46,10 @@ func CSV(schema *models.Schema, data []byte) (*Result, error) {
 		return nil, errors.Wrap(err, "csvDataTypes")
 	}
 
-	schema.StartRow = 1
-	schema.StartColumn = 1
-	schema.SourceType = constants.SourceTypeCSV
-
 	return &Result{
-		Schema:  schema,
-		Headers: headers,
+		StartRow:    1,
+		StartColumn: 1,
+		Headers:     headers,
 	}, nil
 }
 
