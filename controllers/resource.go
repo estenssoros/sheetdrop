@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/estenssoros/sheetdrop/models"
+	"github.com/pkg/errors"
 )
 
 // UserResources gets a user's resources
@@ -62,7 +63,7 @@ func (c *Controller) ResourceSchemaCountByID(ids []int) ([]int, []error) {
 		Cnt int
 	}{}
 	err := c.Model(&models.Resource{}).
-		Select("resources.id, count(*) cnt").
+		Select("resources.id, count(schemas.id) cnt").
 		Joins("LEFT JOIN schemas ON schemas.resource_id = resources.id").
 		Group("resources.id").Find(&counts).Error
 	if err != nil {
@@ -77,5 +78,25 @@ func (c *Controller) ResourceSchemaCountByID(ids []int) ([]int, []error) {
 		out[i] = lookup[id]
 	}
 	return out, nil
+}
 
+type CreateResourceInput struct {
+	OrganizationID int
+	ResourceName   string
+}
+
+func (c *Controller) CreateResouce(input *CreateResourceInput) (*models.Resource, error) {
+	resource := &models.Resource{
+		OrganizationID: input.OrganizationID,
+		Name:           &input.ResourceName,
+	}
+	return resource, c.Create(resource).Error
+}
+
+func (c *Controller) DeleteResourceByID(id int) (*models.Resource, error) {
+	resource, err := c.ResourceByID(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "c.ResourceByID")
+	}
+	return resource, c.Delete(resource).Error
 }
