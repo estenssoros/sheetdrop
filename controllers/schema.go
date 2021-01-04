@@ -1,6 +1,11 @@
 package controllers
 
 import (
+	"path/filepath"
+
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/estenssoros/sheetdrop/constants"
+	"github.com/estenssoros/sheetdrop/internal/process"
 	"github.com/estenssoros/sheetdrop/models"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -128,4 +133,49 @@ func (c *Controller) SchemasByIDs(ids []int) ([]*models.Schema, []error) {
 		out[i] = lookup[id]
 	}
 	return out, nil
+}
+
+type CreateSchemaInput struct {
+	ResourceID int
+	Name       string
+	File       *graphql.Upload
+}
+
+func (c *Controller) CreateSchema(input *CreateSchemaInput) (*models.Schema, error) {
+	schema := &models.Schema{
+		ResourceID: input.ResourceID,
+		Name:       &input.Name,
+		SourceURI:  input.File.Filename,
+	}
+	ext := filepath.Ext(input.File.Filename)
+	var processor = func() (*process.Result, error) { return nil, nil }
+	switch ext {
+	case constants.ExtensionExcel:
+		schema.SourceType = constants.SourceTypeExcel
+		processor = func() (*process.Result, error) {
+			return process.Excel(schema, input.File.File)
+		}
+	case constants.ExtensionCSV:
+		schema.SourceType = constants.SourceTypeCSV
+		processor = func() (*process.Result, error) {
+			return process.CSV(schema, input.File.File)
+		}
+	default:
+		return nil, errors.Errorf("extesnion not implemented: %s", ext)
+	}
+	result, err := processor()
+	if err != nil {
+		return nil, errors.Wrap(err, "processor")
+	}
+	{
+		schema.StartColumn = result.StartColumn
+		schema.StartRow = result.StartRow
+	}
+	if err := c.Create(schema).Error; err != nil {
+		return nil, errors.Wrap(err, "create schema")
+	}
+	for _, header := range result.Headers {
+		header.SchemaID = schema.ID
+	}
+	return schema, errors.Wrap(c.Create(&result.Headers).Error, "create headers")
 }
