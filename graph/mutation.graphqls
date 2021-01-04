@@ -1,26 +1,21 @@
 scalar Upload
 
 type Mutation {
-  getUser(id: ID!): User!
   createUser(userName: String!): User!
   deleteUser(id: ID!): User!
 
-  getOrg(id: ID!): Organization!
   createOrg(userID: ID!, orgName: String!): Organization!
   deleteOrg(id: ID!): Organization!
   addUserToOrg(userID: ID!, orgID: ID!): Organization!
   removeUserFromOrg(userID: ID!, orgID: ID!): Organization!
 
-  getResource(id: ID!): Resource!
   createResource(orgID: ID!, resourceName: String!): Resource!
   deleteResource(id: ID!): Resource!
   updateResource(id: ID!, resourceName: String!): Resource!
 
-  getSchema(id: ID!): Schema!
-  getSchemas(resourceID: ID!): [Schema!]
   deleteSchema(id: ID!): Schema!
   createSchema(name: String!): Schema!
-  createSchemaWithFile(name: String!, file: Upload!): Schema!
+  createSchemaWithFile(name: String!, file: Upload!): Schema
   updateSchemaName(id: ID!, name: String!): Schema!
   updateSchemaFile(id: ID!, file: Upload!): Schema!
 }

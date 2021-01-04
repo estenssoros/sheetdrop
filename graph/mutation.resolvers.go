@@ -8,13 +8,10 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/estenssoros/sheetdrop/controllers"
 	generated1 "github.com/estenssoros/sheetdrop/graph/generated"
 	"github.com/estenssoros/sheetdrop/models"
 )
-
-func (r *mutationResolver) GetUser(ctx context.Context, id int) (*models.User, error) {
-	panic(fmt.Errorf("not implemented"))
-}
 
 func (r *mutationResolver) CreateUser(ctx context.Context, userName string) (*models.User, error) {
 	return r.GetOrCreateUserByName(userName)
@@ -22,10 +19,6 @@ func (r *mutationResolver) CreateUser(ctx context.Context, userName string) (*mo
 
 func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User, error) {
 	return nil, r.DeleteUserByID(id)
-}
-
-func (r *mutationResolver) GetOrg(ctx context.Context, id int) (*models.Organization, error) {
-	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *mutationResolver) CreateOrg(ctx context.Context, userID int, orgName string) (*models.Organization, error) {
@@ -48,7 +41,7 @@ func (r *mutationResolver) CreateOrg(ctx context.Context, userID int, orgName st
 }
 
 func (r *mutationResolver) DeleteOrg(ctx context.Context, id int) (*models.Organization, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.DeleteOrgByID(id)
 }
 
 func (r *mutationResolver) AddUserToOrg(ctx context.Context, userID int, orgID int) (*models.Organization, error) {
@@ -63,27 +56,18 @@ func (r *mutationResolver) RemoveUserFromOrg(ctx context.Context, userID int, or
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) GetResource(ctx context.Context, id int) (*models.Resource, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
 func (r *mutationResolver) CreateResource(ctx context.Context, orgID int, resourceName string) (*models.Resource, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.Controller.CreateResouce(&controllers.CreateResourceInput{
+		OrganizationID: orgID,
+		ResourceName:   resourceName,
+	})
 }
 
 func (r *mutationResolver) DeleteResource(ctx context.Context, id int) (*models.Resource, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.DeleteResourceByID(id)
 }
 
 func (r *mutationResolver) UpdateResource(ctx context.Context, id int, resourceName string) (*models.Resource, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *mutationResolver) GetSchema(ctx context.Context, id int) (*models.Schema, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *mutationResolver) GetSchemas(ctx context.Context, resourceID int) ([]*models.Schema, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
