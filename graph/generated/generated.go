@@ -63,8 +63,8 @@ type ComplexityRoot struct {
 		AddUserToOrg         func(childComplexity int, userID int, orgID int) int
 		CreateOrg            func(childComplexity int, userID int, orgName string) int
 		CreateResource       func(childComplexity int, orgID int, resourceName string) int
-		CreateSchema         func(childComplexity int, name string) int
-		CreateSchemaWithFile func(childComplexity int, name string, file graphql.Upload) int
+		CreateSchema         func(childComplexity int, resourceID int, name string) int
+		CreateSchemaWithFile func(childComplexity int, resourceID int, name string, file graphql.Upload) int
 		CreateUser           func(childComplexity int, userName string) int
 		DeleteOrg            func(childComplexity int, id int) int
 		DeleteResource       func(childComplexity int, id int) int
@@ -141,8 +141,8 @@ type MutationResolver interface {
 	DeleteResource(ctx context.Context, id int) (*models.Resource, error)
 	UpdateResource(ctx context.Context, id int, resourceName string) (*models.Resource, error)
 	DeleteSchema(ctx context.Context, id int) (*models.Schema, error)
-	CreateSchema(ctx context.Context, name string) (*models.Schema, error)
-	CreateSchemaWithFile(ctx context.Context, name string, file graphql.Upload) (*models.Schema, error)
+	CreateSchema(ctx context.Context, resourceID int, name string) (*models.Schema, error)
+	CreateSchemaWithFile(ctx context.Context, resourceID int, name string, file graphql.Upload) (*models.Schema, error)
 	UpdateSchemaName(ctx context.Context, id int, name string) (*models.Schema, error)
 	UpdateSchemaFile(ctx context.Context, id int, file graphql.Upload) (*models.Schema, error)
 }
@@ -286,7 +286,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateSchema(childComplexity, args["name"].(string)), true
+		return e.complexity.Mutation.CreateSchema(childComplexity, args["resourceID"].(int), args["name"].(string)), true
 
 	case "Mutation.createSchemaWithFile":
 		if e.complexity.Mutation.CreateSchemaWithFile == nil {
@@ -298,7 +298,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateSchemaWithFile(childComplexity, args["name"].(string), args["file"].(graphql.Upload)), true
+		return e.complexity.Mutation.CreateSchemaWithFile(childComplexity, args["resourceID"].(int), args["name"].(string), args["file"].(graphql.Upload)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -756,8 +756,8 @@ type Mutation {
   updateResource(id: ID!, resourceName: String!): Resource!
 
   deleteSchema(id: ID!): Schema!
-  createSchema(name: String!): Schema!
-  createSchemaWithFile(name: String!, file: Upload!): Schema!
+  createSchema(resourceID: ID!, name: String!): Schema!
+  createSchemaWithFile(resourceID: ID!, name: String!, file: Upload!): Schema
   updateSchemaName(id: ID!, name: String!): Schema!
   updateSchemaFile(id: ID!, file: Upload!): Schema!
 }
@@ -911,39 +911,57 @@ func (ec *executionContext) field_Mutation_createResource_args(ctx context.Conte
 func (ec *executionContext) field_Mutation_createSchemaWithFile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 int
+	if tmp, ok := rawArgs["resourceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resourceID"] = arg0
+	var arg1 string
 	if tmp, ok := rawArgs["name"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["name"] = arg0
-	var arg1 graphql.Upload
+	args["name"] = arg1
+	var arg2 graphql.Upload
 	if tmp, ok := rawArgs["file"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
-		arg1, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
+		arg2, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["file"] = arg1
+	args["file"] = arg2
 	return args, nil
 }
 
 func (ec *executionContext) field_Mutation_createSchema_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["name"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg0 int
+	if tmp, ok := rawArgs["resourceID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceID"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["name"] = arg0
+	args["resourceID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg1
 	return args, nil
 }
 
@@ -1948,7 +1966,7 @@ func (ec *executionContext) _Mutation_createSchema(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateSchema(rctx, args["name"].(string))
+		return ec.resolvers.Mutation().CreateSchema(rctx, args["resourceID"].(int), args["name"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1990,21 +2008,18 @@ func (ec *executionContext) _Mutation_createSchemaWithFile(ctx context.Context, 
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateSchemaWithFile(rctx, args["name"].(string), args["file"].(graphql.Upload))
+		return ec.resolvers.Mutation().CreateSchemaWithFile(rctx, args["resourceID"].(int), args["name"].(string), args["file"].(graphql.Upload))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*models.Schema)
 	fc.Result = res
-	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
+	return ec.marshalOSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updateSchemaName(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4603,9 +4618,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "createSchemaWithFile":
 			out.Values[i] = ec._Mutation_createSchemaWithFile(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "updateSchemaName":
 			out.Values[i] = ec._Mutation_updateSchemaName(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -5895,6 +5907,13 @@ func (ec *executionContext) marshalOSchema2ᚕᚖgithubᚗcomᚋestenssorosᚋsh
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalOSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx context.Context, sel ast.SelectionSet, v *models.Schema) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Schema(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
