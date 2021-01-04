@@ -14,8 +14,8 @@ type Mutation {
   updateResource(id: ID!, resourceName: String!): Resource!
 
   deleteSchema(id: ID!): Schema!
-  createSchema(name: String!): Schema!
-  createSchemaWithFile(name: String!, file: Upload!): Schema
+  createSchema(resourceID: ID!, name: String!): Schema!
+  createSchemaWithFile(resourceID: ID!, name: String!, file: Upload!): Schema
   updateSchemaName(id: ID!, name: String!): Schema!
   updateSchemaFile(id: ID!, file: Upload!): Schema!
 }
