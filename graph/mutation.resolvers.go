@@ -75,12 +75,16 @@ func (r *mutationResolver) DeleteSchema(ctx context.Context, id int) (*models.Sc
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) CreateSchema(ctx context.Context, name string) (*models.Schema, error) {
+func (r *mutationResolver) CreateSchema(ctx context.Context, resourceID int, name string) (*models.Schema, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) CreateSchemaWithFile(ctx context.Context, name string, file graphql.Upload) (*models.Schema, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *mutationResolver) CreateSchemaWithFile(ctx context.Context, resourceID int, name string, file graphql.Upload) (*models.Schema, error) {
+	return r.Controller.CreateSchema(&controllers.CreateSchemaInput{
+		ResourceID: resourceID,
+		Name:       name,
+		File:       &file,
+	})
 }
 
 func (r *mutationResolver) UpdateSchemaName(ctx context.Context, id int, name string) (*models.Schema, error) {
