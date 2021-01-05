@@ -18,4 +18,6 @@ type Mutation {
   createSchemaWithFile(resourceID: ID!, name: String!, file: Upload!): Schema
   updateSchemaName(id: ID!, name: String!): Schema!
   updateSchemaFile(id: ID!, file: Upload!): Schema!
+
+  setHeaderID(id: ID!, isID: Boolean!): Header!
 }

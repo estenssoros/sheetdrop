@@ -71,6 +71,7 @@ type ComplexityRoot struct {
 		DeleteSchema         func(childComplexity int, id int) int
 		DeleteUser           func(childComplexity int, id int) int
 		RemoveUserFromOrg    func(childComplexity int, userID int, orgID int) int
+		SetHeaderID          func(childComplexity int, id int, isID bool) int
 		UpdateResource       func(childComplexity int, id int, resourceName string) int
 		UpdateSchemaFile     func(childComplexity int, id int, file graphql.Upload) int
 		UpdateSchemaName     func(childComplexity int, id int, name string) int
@@ -145,6 +146,7 @@ type MutationResolver interface {
 	CreateSchemaWithFile(ctx context.Context, resourceID int, name string, file graphql.Upload) (*models.Schema, error)
 	UpdateSchemaName(ctx context.Context, id int, name string) (*models.Schema, error)
 	UpdateSchemaFile(ctx context.Context, id int, file graphql.Upload) (*models.Schema, error)
+	SetHeaderID(ctx context.Context, id int, isID bool) (*models.Header, error)
 }
 type OrganizationResolver interface {
 	Users(ctx context.Context, obj *models.Organization) ([]*models.User, error)
@@ -371,6 +373,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.RemoveUserFromOrg(childComplexity, args["userID"].(int), args["orgID"].(int)), true
+
+	case "Mutation.setHeaderID":
+		if e.complexity.Mutation.SetHeaderID == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setHeaderID_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetHeaderID(childComplexity, args["id"].(int), args["isID"].(bool)), true
 
 	case "Mutation.updateResource":
 		if e.complexity.Mutation.UpdateResource == nil {
@@ -760,6 +774,8 @@ type Mutation {
   createSchemaWithFile(resourceID: ID!, name: String!, file: Upload!): Schema
   updateSchemaName(id: ID!, name: String!): Schema!
   updateSchemaFile(id: ID!, file: Upload!): Schema!
+
+  setHeaderID(id: ID!, isID: Boolean!): Header!
 }
 `, BuiltIn: false},
 	{Name: "graph/schema.graphqls", Input: `# GraphQL schema example
@@ -1061,6 +1077,30 @@ func (ec *executionContext) field_Mutation_removeUserFromOrg_args(ctx context.Co
 		}
 	}
 	args["orgID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setHeaderID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 bool
+	if tmp, ok := rawArgs["isID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isID"))
+		arg1, err = ec.unmarshalNBoolean2bool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["isID"] = arg1
 	return args, nil
 }
 
@@ -2104,6 +2144,48 @@ func (ec *executionContext) _Mutation_updateSchemaFile(ctx context.Context, fiel
 	res := resTmp.(*models.Schema)
 	fc.Result = res
 	return ec.marshalNSchema2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_setHeaderID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_setHeaderID_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SetHeaderID(rctx, args["id"].(int), args["isID"].(bool))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Header)
+	fc.Result = res
+	return ec.marshalNHeader2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐHeader(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Organization_id(ctx context.Context, field graphql.CollectedField, obj *models.Organization) (ret graphql.Marshaler) {
@@ -4628,6 +4710,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "setHeaderID":
+			out.Values[i] = ec._Mutation_setHeaderID(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5317,6 +5404,10 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNHeader2githubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐHeader(ctx context.Context, sel ast.SelectionSet, v models.Header) graphql.Marshaler {
+	return ec._Header(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNHeader2ᚖgithubᚗcomᚋestenssorosᚋsheetdropᚋmodelsᚐHeader(ctx context.Context, sel ast.SelectionSet, v *models.Header) graphql.Marshaler {

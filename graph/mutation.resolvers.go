@@ -95,6 +95,10 @@ func (r *mutationResolver) UpdateSchemaFile(ctx context.Context, id int, file gr
 	panic(fmt.Errorf("not implemented"))
 }
 
+func (r *mutationResolver) SetHeaderID(ctx context.Context, id int, isID bool) (*models.Header, error) {
+	return r.Controller.SetHeaderID(id, isID)
+}
+
 // Mutation returns generated1.MutationResolver implementation.
 func (r *Resolver) Mutation() generated1.MutationResolver { return &mutationResolver{r} }
 

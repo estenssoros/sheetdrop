@@ -47,3 +47,16 @@ func (c *Controller) HeadersBySchemaIDs(schemaIds []int) ([][]*models.Header, []
 	}
 	return out, nil
 }
+func (c *Controller) HeaderByID(id int) (*models.Header, error) {
+	header := &models.Header{}
+	return header, c.Where("id=?", id).First(header).Error
+}
+
+func (c *Controller) SetHeaderID(id int, isID bool) (*models.Header, error) {
+	header, err := c.HeaderByID(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "c.HeaderByID")
+	}
+	header.IsID = isID
+	return header, c.Save(header).Error
+}
