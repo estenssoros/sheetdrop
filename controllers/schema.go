@@ -14,7 +14,7 @@ import (
 // SchemaHeaders gets headers for a schema
 func (c *Controller) SchemaHeaders(schemaID int) ([]*models.Header, error) {
 	headers := []*models.Header{}
-	return headers, c.Where("schema_id=?", schemaID).Find(&headers).Error
+	return headers, c.Where("schema_id=?", schemaID).Order("idx").Find(&headers).Error
 }
 
 // SchemaHeadersSet headers set for a schema
