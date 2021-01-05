@@ -80,11 +80,13 @@ func (c *Controller) ResourceSchemaCountByID(ids []int) ([]int, []error) {
 	return out, nil
 }
 
+// CreateResourceInput input for create resource
 type CreateResourceInput struct {
 	OrganizationID int
 	ResourceName   string
 }
 
+// CreateResouce creates a resource with name and organization id
 func (c *Controller) CreateResouce(input *CreateResourceInput) (*models.Resource, error) {
 	resource := &models.Resource{
 		OrganizationID: input.OrganizationID,
@@ -93,6 +95,7 @@ func (c *Controller) CreateResouce(input *CreateResourceInput) (*models.Resource
 	return resource, c.Create(resource).Error
 }
 
+// DeleteResourceByID deletes a resource by id
 func (c *Controller) DeleteResourceByID(id int) (*models.Resource, error) {
 	resource, err := c.ResourceByID(id)
 	if err != nil {

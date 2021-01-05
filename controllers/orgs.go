@@ -120,6 +120,7 @@ func (c *Controller) OrganizationsByIDs(ids []int) ([]*models.Organization, []er
 	return out, nil
 }
 
+// DeleteOrgByID deletes an org by id
 func (c *Controller) DeleteOrgByID(id int) (*models.Organization, error) {
 	org, err := c.OrganizationByID(id)
 	if err != nil {

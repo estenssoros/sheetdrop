@@ -135,12 +135,14 @@ func (c *Controller) SchemasByIDs(ids []int) ([]*models.Schema, []error) {
 	return out, nil
 }
 
+// CreateSchemaInput input to create schema
 type CreateSchemaInput struct {
 	ResourceID int
 	Name       string
 	File       *graphql.Upload
 }
 
+// CreateSchema creates a schema with a resource, name and file
 func (c *Controller) CreateSchema(input *CreateSchemaInput) (*models.Schema, error) {
 	schema := &models.Schema{
 		ResourceID: input.ResourceID,
