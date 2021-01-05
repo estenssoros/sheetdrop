@@ -25,7 +25,19 @@ func (r Resource) String() string {
 	return string(ju)
 }
 
+// BeforeCreate before creeate operations
 func (r *Resource) BeforeCreate(tx *gorm.DB) error {
 	r.AuthToken = uuid.Must(uuid.NewV4())
 	return nil
+}
+
+// ResourceMigration for gorm foreign key
+type ResourceMigration struct {
+	Resource
+	Organization *Organization `gorm:"foreignKey:OrganizationID"`
+}
+
+// TableName implements tablenameable
+func (r ResourceMigration) TableName() string {
+	return `resources`
 }

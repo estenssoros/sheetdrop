@@ -5,12 +5,14 @@ import (
 	"time"
 )
 
+// HeaderHeader WIP header-header relationship
 type HeaderHeader struct {
 	ID              int
 	HeaderID        int
 	ForeignHeaderID int
 }
 
+// TableName implements tablenameable
 func (h HeaderHeader) TableName() string {
 	return `header_header`
 }
@@ -33,10 +35,23 @@ func (h Header) TableName() string {
 	return `header`
 }
 
+// HeaderMigration for gorm foreign key
+type HeaderMigration struct {
+	Header
+	Schema *Schema `gorm:"foreignKey:SchemaID"`
+}
+
+// TableName implements tablenameable
+func (h HeaderMigration) TableName() string {
+	return `header`
+}
+
+// HeaderSet for set operations with headers
 type HeaderSet struct {
 	Headers map[string]*Header
 }
 
+// NewHeaderSet creates a new header set
 func NewHeaderSet(headers []*Header) *HeaderSet {
 	headerMap := map[string]*Header{}
 	for _, header := range headers {
@@ -46,6 +61,8 @@ func NewHeaderSet(headers []*Header) *HeaderSet {
 		Headers: headerMap,
 	}
 }
+
+// Has does header exists in headerset
 func (h *HeaderSet) Has(other *Header) bool {
 	_, ok := h.Headers[other.Name]
 	return ok

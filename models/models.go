@@ -2,11 +2,11 @@ package models
 
 // Models master list of models
 var Models = []interface{}{
-	&Resource{},
-	&Header{},
+	&ResourceMigration{},
+	&HeaderMigration{},
 	&HeaderHeader{},
-	&Schema{},
+	&SchemaMigration{},
 	&User{},
 	&Organization{},
-	&OrganizationUser{},
+	&OrganizationUserMigration{},
 }

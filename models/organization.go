@@ -4,10 +4,11 @@ import "time"
 
 const (
 	LevelFree = iota
-	LevelPaid1
+	LevelPaid
 	LevelAdmin = 69
 )
 
+// Organization groups users
 type Organization struct {
 	ID           int `gorm:"primarykey"`
 	CreatedAt    time.Time
@@ -22,6 +23,7 @@ func (o Organization) TableName() string {
 	return `organization`
 }
 
+// OrganizationUser models the many to many relationship between organizations and users
 type OrganizationUser struct {
 	ID             int `gorm:"primarykey"`
 	CreatedAt      time.Time
@@ -33,5 +35,17 @@ type OrganizationUser struct {
 
 // TableName implements tablenameable
 func (o OrganizationUser) TableName() string {
+	return `organization_user`
+}
+
+// OrganizationUserMigration for gorm foreign key
+type OrganizationUserMigration struct {
+	OrganizationUser
+	Organization *Organization `gorm:"foreignKey:OrganizationID"`
+	User         *User         `gorm:"foreignKey:UserID"`
+}
+
+// TableName implements tablenameable
+func (o OrganizationUserMigration) TableName() string {
 	return `organization_user`
 }

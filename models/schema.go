@@ -36,6 +36,7 @@ type Schema struct {
 	UUID        uuid.UUID `gorm:"type:varchar(36);unique"`
 }
 
+// BeforeCreate before create operations
 func (s *Schema) BeforeCreate(tx *gorm.DB) error {
 	s.UUID = uuid.Must(uuid.NewV4())
 	return nil
@@ -44,4 +45,15 @@ func (s *Schema) BeforeCreate(tx *gorm.DB) error {
 func (s Schema) String() string {
 	ju, _ := json.MarshalIndent(s, "", " ")
 	return string(ju)
+}
+
+// SchemaMigration for gorm foreign key
+type SchemaMigration struct {
+	Schema
+	Resource *Resource `gorm:"foreignKey:ResourceID"`
+}
+
+// TableName implements tablenameable
+func (s SchemaMigration) TableName() string {
+	return `schemas`
 }
