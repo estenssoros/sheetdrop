@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"github.com/estenssoros/sheetdrop/internal/helpers"
 	"github.com/estenssoros/sheetdrop/models"
 	"github.com/estenssoros/sheetdrop/responses"
 	"github.com/pkg/errors"
@@ -22,8 +21,8 @@ func (c *Controller) UserOrgsResponse(user *models.User) ([]*responses.Organizat
 
 // CreateOrgInput in put for creating org
 type CreateOrgInput struct {
-	Org  *models.Organization
-	User *models.User
+	OrgName string
+	UserID  int
 }
 
 // CreateOrg create an org
@@ -31,12 +30,15 @@ func (c *Controller) CreateOrg(input *CreateOrgInput) error {
 	if err := c.Validate(input); err != nil {
 		return errors.Wrap(err, "Validate")
 	}
-	if err := c.Create(input.Org).Error; err != nil {
+	org := &models.Organization{
+		Name: input.OrgName,
+	}
+	if err := c.Create(org).Error; err != nil {
 		return errors.Wrap(err, "create org")
 	}
 	orgUser := &models.OrganizationUser{
-		OrganizationID: input.Org.ID,
-		UserID:         input.User.ID,
+		OrganizationID: org.ID,
+		UserID:         input.UserID,
 	}
 	return errors.Wrap(c.Create(orgUser).Error, "create org user")
 }
@@ -83,7 +85,7 @@ func (c *Controller) UserHasOrg(userID, orgID int) (bool, error) {
 // CreateOrgWithName creates an org with a given name
 func (c *Controller) CreateOrgWithName(orgName string) (*models.Organization, error) {
 	org := &models.Organization{
-		Name: helpers.StringPtr(orgName),
+		Name: orgName,
 	}
 	return org, c.Create(org).Error
 }
