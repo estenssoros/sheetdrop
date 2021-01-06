@@ -44,10 +44,6 @@ func run() error {
 	restRoutes(e.Group(
 		"/rest",
 	))
-	apiRoutes(e.Group(
-		"/api",
-		// middle.Auth(),
-	))
 
 	return e.Start(":1323")
 }
