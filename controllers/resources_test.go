@@ -3,6 +3,7 @@ package controllers
 import (
 	"testing"
 
+	"github.com/satori/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -60,4 +61,18 @@ func TestResourceSchemaCountByID(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.NotEmpty(t, out)
+}
+
+func TestCreateResource(t *testing.T) {
+	out, err := ctl(t).CreateResouce(&CreateResourceInput{
+		OrganizationID: 1,
+		ResourceName:   uuid.NewV4().String(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = ctl(t).DeleteResourceByID(out.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
