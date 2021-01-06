@@ -20,7 +20,7 @@ func resourceRoutes(e *echo.Group) {
 
 func orgRoutes(e *echo.Group) {
 	e.GET("/orgs", getOrgsHandler)
-	e.POST("/org", createOrgHandler)
+	// e.POST("/org", createOrgHandler)
 	e.PATCH("/org", updateOrgHandler)
 	e.DELETE("/org", deleteOrgHandler)
 }
@@ -29,8 +29,8 @@ func schemaRoutes(e *echo.Group) {
 	e.GET("/schema/:resourceID", getSchemaHandler)
 	e.PATCH("/schema", updateSchemaHandler)
 	e.DELETE("/schema", deleteSchemaHandler)
-	e.PATCH("/schema/file-upload", schemaFilePatchHandler)
-	e.POST("/schema/file-upload", schemaFileUploadHandler)
+	// e.PATCH("/schema/file-upload", schemaFilePatchHandler)
+	// e.POST("/schema/file-upload", schemaFileUploadHandler)
 }
 
 func restRoutes(e *echo.Group) {
