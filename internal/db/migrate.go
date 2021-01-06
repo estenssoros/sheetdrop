@@ -25,7 +25,7 @@ var migrateCmd = &cobra.Command{
 		for _, model := range models.Models {
 			if drop {
 				if err := db.Migrator().DropTable(model); err != nil {
-					return errors.Wrap(err, "orm.DropTableMsSQL")
+					return errors.Wrap(err, "db.Migrator().DropTable")
 				}
 			}
 			if err := db.AutoMigrate(model); err != nil {
