@@ -3,6 +3,7 @@ package controllers
 import (
 	"testing"
 
+	"github.com/satori/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,4 +51,27 @@ func TestUserHasOrg(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, true, out)
+}
+
+func TestOrganizationsByIDs(t *testing.T) {
+	out, err := ctl(t).OrganizationsByIDs([]int{1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.NotEmpty(t, out)
+}
+
+func TestCreateDeleteOrg(t *testing.T) {
+	org, err := ctl(t).CreateOrgWithName(uuid.NewV4().String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = ctl(t).CreateOrgUser(org.ID, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = ctl(t).DeleteOrgByID(org.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
