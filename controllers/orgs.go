@@ -2,46 +2,8 @@ package controllers
 
 import (
 	"github.com/estenssoros/sheetdrop/models"
-	"github.com/estenssoros/sheetdrop/responses"
 	"github.com/pkg/errors"
 )
-
-// UserOrgsResponse get orgs for a user
-func (c *Controller) UserOrgsResponse(user *models.User) ([]*responses.Organization, error) {
-	orgs := []*responses.Organization{}
-	query := c.Model(&models.Organization{}).
-		Select(`organization.id, organization.name, organization.account_level, count(*) members`).
-		Joins("JOIN organization_user ON organization_user.organization_id = organization.id").
-		Where("organization_user.user_id=?", user.ID).
-		Group("organization.id, organization.name,organization.account_level")
-	return orgs, query.
-		Find(&orgs).
-		Error
-}
-
-// CreateOrgInput in put for creating org
-type CreateOrgInput struct {
-	OrgName string
-	UserID  int
-}
-
-// CreateOrg create an org
-func (c *Controller) CreateOrg(input *CreateOrgInput) error {
-	if err := c.Validate(input); err != nil {
-		return errors.Wrap(err, "Validate")
-	}
-	org := &models.Organization{
-		Name: input.OrgName,
-	}
-	if err := c.Create(org).Error; err != nil {
-		return errors.Wrap(err, "create org")
-	}
-	orgUser := &models.OrganizationUser{
-		OrganizationID: org.ID,
-		UserID:         input.UserID,
-	}
-	return errors.Wrap(c.Create(orgUser).Error, "create org user")
-}
 
 // UserCanEditOrg can a user edit an org
 func (c *Controller) UserCanEditOrg(userID, orgID int) (bool, error) {

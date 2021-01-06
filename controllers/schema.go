@@ -77,35 +77,6 @@ func (c *Controller) SchemaByID(schemaID int) (*models.Schema, error) {
 	return schema, c.Where("id=?", schemaID).First(schema).Error
 }
 
-// SchemaRelations populate schema relations
-// func (c *Controller) SchemaRelations(schemas []*models.Schema) error {
-// 	ids := make([]int, len(schemas))
-// 	for i := 0; i < len(schemas); i++ {
-// 		ids[i] = schemas[i].ID
-// 	}
-// 	headersMap := map[int][]*models.Header{}
-// 	{
-// 		headers := []*models.Header{}
-// 		if err := c.Where("schema_id IN (?)", ids).Order("idx").Find(&headers).Error; err != nil {
-// 			return err
-// 		}
-// 		for _, h := range headers {
-// 			if headers, ok := headersMap[h.SchemaID]; ok {
-// 				headers = append(headers, h)
-// 				headersMap[h.SchemaID] = headers
-// 			} else {
-// 				headersMap[h.SchemaID] = []*models.Header{h}
-// 			}
-// 		}
-// 	}
-// 	for _, schema := range schemas {
-// 		if headers, ok := headersMap[schema.ID]; ok {
-// 			schema.Headers = headers
-// 		}
-// 	}
-// 	return nil
-// }
-
 // SchemasForResource gets schemas for resource
 func (c *Controller) SchemasForResource(resourceID int) ([]*models.Schema, error) {
 	schemas := []*models.Schema{}
