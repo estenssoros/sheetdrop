@@ -14,7 +14,7 @@ type Organization struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    *time.Time `gorm:"index"`
-	Name         *string
+	Name         string
 	AccountLevel int
 }
 
@@ -41,8 +41,8 @@ func (o OrganizationUser) TableName() string {
 // OrganizationUserMigration for gorm foreign key
 type OrganizationUserMigration struct {
 	OrganizationUser
-	Organization *Organization `gorm:"foreignKey:OrganizationID"`
-	User         *User         `gorm:"foreignKey:UserID"`
+	Organization *Organization `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE"`
+	User         *User         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
 
 // TableName implements tablenameable

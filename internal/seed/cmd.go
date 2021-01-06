@@ -26,7 +26,7 @@ func userSeeds() []interface{} {
 func organizationSeeds() []interface{} {
 	return []interface{}{
 		&models.Organization{
-			Name: helpers.StringPtr("estenssoros"),
+			Name: "estenssoros",
 		},
 	}
 }
