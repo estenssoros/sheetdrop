@@ -8,52 +8,12 @@ import (
 	"github.com/estenssoros/sheetdrop/internal/process"
 	"github.com/estenssoros/sheetdrop/models"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 // SchemaHeaders gets headers for a schema
 func (c *Controller) SchemaHeaders(schemaID int) ([]*models.Header, error) {
 	headers := []*models.Header{}
 	return headers, c.Where("schema_id=?", schemaID).Order("idx").Find(&headers).Error
-}
-
-// SchemaHeadersSet headers set for a schema
-func (c *Controller) SchemaHeadersSet(schema *models.Schema) (*models.HeaderSet, error) {
-	headers, err := c.SchemaHeaders(schema.ID)
-	if err != nil {
-		return nil, errors.Wrap(err, "GetSchemaHeaders")
-	}
-	return models.NewHeaderSet(headers), nil
-}
-
-// UpdateSchemaInput input into update schema
-type UpdateSchemaInput struct {
-	ID   *int
-	Name *string
-}
-
-// Validate validates inputs
-func (input *UpdateSchemaInput) Validate(db *gorm.DB) error {
-	if input.ID == nil {
-		return errors.New("missing id")
-	}
-	if input.Name == nil {
-		return errors.New("missing name")
-	}
-	return nil
-}
-
-// UpdateSchema updates a schema
-func (c *Controller) UpdateSchema(input *UpdateSchemaInput) (*models.Schema, error) {
-	if err := c.Validate(input); err != nil {
-		return nil, errors.Wrap(err, "validate")
-	}
-	schema := &models.Schema{}
-	if err := c.Where("id=?", *input.ID).First(schema).Error; err != nil {
-		return nil, err
-	}
-	schema.Name = input.Name
-	return schema, c.Save(schema).Error
 }
 
 // UsersFromSchemaID get users from a schema
@@ -64,11 +24,6 @@ func (c *Controller) UsersFromSchemaID(schemaID int) ([]*models.User, error) {
 		Joins("JOIN schemas ON schemas.resource_id = resources.id").
 		Where("schemas.id=?", schemaID).
 		Find(&users).Error
-}
-
-// DeleteSchema deletes a schema
-func (c *Controller) DeleteSchema(schema *models.Schema) error {
-	return c.Delete(schema).Error
 }
 
 // SchemaByID fetch a schema by id
@@ -151,4 +106,12 @@ func (c *Controller) CreateSchema(input *CreateSchemaInput) (*models.Schema, err
 		header.SchemaID = schema.ID
 	}
 	return schema, errors.Wrap(c.Create(&result.Headers).Error, "create headers")
+}
+
+func (c *Controller) DeleteSchemaByID(id int) (*models.Schema, error) {
+	schema, err := c.SchemaByID(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "c.SchemaByID")
+	}
+	return schema, c.Delete(schema).Error
 }
