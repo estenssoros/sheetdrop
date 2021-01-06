@@ -18,7 +18,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, userName string) (*mo
 }
 
 func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*models.User, error) {
-	return nil, r.DeleteUserByID(id)
+	return r.DeleteUserByID(id)
 }
 
 func (r *mutationResolver) CreateOrg(ctx context.Context, userID int, orgName string) (*models.Organization, error) {
@@ -72,7 +72,7 @@ func (r *mutationResolver) UpdateResource(ctx context.Context, id int, resourceN
 }
 
 func (r *mutationResolver) DeleteSchema(ctx context.Context, id int) (*models.Schema, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.DeleteSchemaByID(id)
 }
 
 func (r *mutationResolver) CreateSchema(ctx context.Context, resourceID int, name string) (*models.Schema, error) {
