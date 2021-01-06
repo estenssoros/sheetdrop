@@ -6,9 +6,7 @@ import (
 	"time"
 
 	"github.com/estenssoros/sheetdrop/constants"
-	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -46,11 +44,11 @@ type connector interface {
 }
 
 func openConnection(conn connector) (*gorm.DB, error) {
-	start := time.Now()
-	defer func() {
-		logrus.Infof("latency: %v", time.Since(start))
-	}()
-	logrus.Infof("connecting to: %s", conn.database())
+	// start := time.Now()
+	// defer func() {
+	// 	logrus.Infof("latency: %v", time.Since(start))
+	// }()
+	// logrus.Infof("connecting to: %s", conn.database())
 	dialect, err := conn.dialector()
 	if err != nil {
 		return nil, errors.Wrap(err, "conn.dialector")
@@ -61,7 +59,7 @@ func openConnection(conn connector) (*gorm.DB, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "gorm.Open")
 	}
-	logrus.Infof("dialect: %s", db.Dialector.Name())
+	// logrus.Infof("dialect: %s", db.Dialector.Name())
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, errors.Wrap(err, "db.DB")
@@ -73,9 +71,9 @@ func openConnection(conn connector) (*gorm.DB, error) {
 
 // Connect connect to a database by name
 func Connect() (*gorm.DB, error) {
-	if err := godotenv.Load(); err != nil {
-		logrus.Warning("could not find .env")
-	}
+	// if err := godotenv.Load(); err != nil {
+	// 	logrus.Warning("could not find .env")
+	// }
 	config := &Config{
 		Dialect:  os.Getenv(constants.EnvDatabaseDialect),
 		Database: os.Getenv(constants.EnvDataBaseName),
