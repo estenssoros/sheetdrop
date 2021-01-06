@@ -41,14 +41,19 @@ func (c *Controller) UserOrganizations(userID int) ([]*models.Organization, erro
 
 var errNotImplemented = errors.New("not implemented")
 
-// GetUserOrgsResponse gets the user orgs response
-func (c *Controller) GetUserOrgsResponse(user *models.User) ([]*models.Organization, error) {
-	return nil, errNotImplemented
+// CreateUser creates a new user
+func (c *Controller) CreateUser(userName string) (*models.User, error) {
+	user := &models.User{}
+	return user, c.Create(user).Error
 }
 
 // DeleteUserByID deletes a user by id
-func (c *Controller) DeleteUserByID(id int) error {
-	return c.Where("id=?", id).Delete(&models.User{}).Error
+func (c *Controller) DeleteUserByID(id int) (*models.User, error) {
+	user, err := c.GetUserByID(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "c.GetUserByID")
+	}
+	return user, c.Delete(user).Error
 }
 
 // UsersByIds finds users by ids

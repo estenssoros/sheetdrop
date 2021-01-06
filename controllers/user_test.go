@@ -3,6 +3,7 @@ package controllers
 import (
 	"testing"
 
+	"github.com/satori/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,4 +50,15 @@ func TestUsersByIds(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.NotEmpty(t, out)
+}
+
+func TestCreateDeleteUser(t *testing.T) {
+	user, err := ctl(t).CreateUser(uuid.NewV4().String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = ctl(t).DeleteUserByID(user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
